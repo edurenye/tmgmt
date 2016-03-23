@@ -219,8 +219,6 @@ class LocalTaskItemForm extends ContentEntityForm {
           '#theme' => 'tmgmt_local_translation_form_element_status',
           '#value' => $this->entity->isCompleted() ? TMGMT_DATA_ITEM_STATE_COMPLETED : $data[$key]['#status'],
         );
-        $source_language = $language_list[$job->getSourceLangcode()];
-        $target_language = $language_list[$job->getTargetLangcode()];
 
         // Manage the height of the texteareas, depending on the lenght of the
         // description. The minimum number of rows is 3 and the maximum is 15.
@@ -234,7 +232,7 @@ class LocalTaskItemForm extends ContentEntityForm {
         $form[$target_key]['source'] = [
           '#type' => 'textarea',
           '#value' => $data[$key]['#text'],
-          '#title' => $source_language->getName(),
+          '#title' => t('Source'),
           '#disabled' => TRUE,
           '#rows' => $rows,
         ];
@@ -242,7 +240,7 @@ class LocalTaskItemForm extends ContentEntityForm {
         $form[$target_key]['translation'] = [
           '#type' => 'textarea',
           '#default_value' => isset($data[$key]['#translation']['#text']) ? $data[$key]['#translation']['#text'] : NULL,
-          '#title' => $target_language->getName(),
+          '#title' => t('Translation'),
           '#disabled' => !$item->isPending(),
           '#rows' => $rows,
           '#allow_focus' => TRUE,
