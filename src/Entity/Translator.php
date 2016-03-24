@@ -135,6 +135,13 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
   protected $languagePairsCache;
 
   /**
+   * The supported remote languages caches.
+   *
+   * @var array
+   */
+  protected $remoteLanguages = [];
+
+  /**
    * Whether the language cache in the database is outdated.
    *
    * @var bool
@@ -334,6 +341,18 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSupportedRemoteLanguages() {
+    if ($plugin = $this->getPlugin()) {
+      if (empty($this->remoteLanguages)) {
+        $this->remoteLanguages = $plugin->getSupportedRemoteLanguages($this);
+      }
+    }
+    return $this->remoteLanguages;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function clearLanguageCache() {
     $this->languageCache = array();
     \Drupal::cache('data')->delete('tmgmt_languages:' . $this->name);
@@ -373,7 +392,6 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
     }
     return FALSE;
   }
-
 
   /**
    * {@inheritdoc}
@@ -420,14 +438,21 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
     }
 
     $mapping = $this->get('remote_languages_mappings');
+    $remote_languages = $this->getSupportedRemoteLanguages();
     if (!empty($mapping) && array_key_exists($language, $mapping)) {
-      return $mapping[$language];
+      if (empty($remote_languages) || array_key_exists($mapping[$language], $remote_languages)) {
+        return $mapping[$language];
+      }
     }
 
     $default_mappings = $this->getPlugin()->getDefaultRemoteLanguagesMappings();
 
     if (isset($default_mappings[$language])) {
       return $default_mappings[$language];
+    }
+
+    if ($matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages)) {
+      return $matching_language;
     }
 
     return $language;

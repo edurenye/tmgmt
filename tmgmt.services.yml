@@ -13,6 +13,8 @@ services:
   tmgmt.data:
     class: Drupal\tmgmt\Data
     arguments: ['@config.factory']
+  tmgmt.language_matcher:
+    class: Drupal\tmgmt\LanguageMatcher
   tmgmt.tmgmt_job_item.breadcrumb:
     class: Drupal\tmgmt\Menu\JobItemBreadcrumbBuilder
     tags:

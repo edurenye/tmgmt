@@ -125,8 +125,8 @@ class TranslatorForm extends EntityForm {
       '#suffix' => '</div>',
     );
     // Pull the translator plugin info if any.
-    if ($entity->getPluginID()) {
-      $definition = $this->translatorManager->getDefinition($entity->getPluginID());
+    if ($entity->hasPlugin()) {
+      $definition = $this->translatorManager->getDefinition($entity->getPluginId());
       $form['plugin_wrapper']['plugin'] = array(
         '#type' => 'select',
         '#title' => t('Provider plugin'),
@@ -135,7 +135,7 @@ class TranslatorForm extends EntityForm {
         '#executes_submit_callback' => TRUE,
         '#description' => isset($definition['description']) ? Xss::filter($definition['description']) : '',
         '#options' => $available,
-        '#default_value' => $entity->getPluginID(),
+        '#default_value' => $entity->getPluginId(),
         '#required' => TRUE,
         '#disabled' => $busy,
         '#ajax' => array(
@@ -151,41 +151,41 @@ class TranslatorForm extends EntityForm {
       );
 
       // Add the translator plugin settings form.
-      $plugin_ui = $this->translatorManager->createUIInstance($entity->getPluginID());
+      $plugin_ui = $this->translatorManager->createUIInstance($entity->getPluginId());
       $form_state->set('busy', $busy);
       $form['plugin_wrapper']['settings'] += $plugin_ui->buildConfigurationForm($form['plugin_wrapper']['settings'], $form_state);
       if (!Element::children($form['plugin_wrapper']['settings'])) {
         $form['#description'] = t("The @plugin plugin doesn't provide any settings.", array('@plugin' => $plugin_ui->getPluginDefinition()['label']));
       }
-    }
 
-    $controller = $entity->getPlugin();
-
-    // If current translator is configured to provide remote language mapping
-    // provide the form to configure mappings, unless it does not exists yet.
-    if (!empty($controller) && $entity->providesRemoteLanguageMappings()) {
-      $form['plugin_wrapper']['remote_languages_mappings'] = array(
-        '#tree' => TRUE,
-        '#type' => 'details',
-        '#title' => t('Remote languages mappings'),
-        '#description' => t('Here you can specify mappings of your local language codes to the translator language codes.'),
-        '#open' => TRUE,
-      );
-
-      $options = $controller->getSupportedRemoteLanguages($entity);
-      foreach ($entity->getRemoteLanguagesMappings() as $local_language => $remote_language) {
-        $form['plugin_wrapper']['remote_languages_mappings'][$local_language] = array(
-          '#type' => 'textfield',
-          '#title' => \Drupal::languageManager()->getLanguage($local_language)->getName() . ' (' . $local_language . ')',
-          '#default_value' => $remote_language,
-          '#size' => 6,
+      // If current translator is configured to provide remote language mapping
+      // provide the form to configure mappings, unless it does not exists yet.
+      if ($entity->providesRemoteLanguageMappings()) {
+        $form['plugin_wrapper']['remote_languages_mappings'] = array(
+          '#tree' => TRUE,
+          '#type' => 'details',
+          '#title' => t('Remote languages mappings'),
+          '#description' => t('Here you can specify mappings of your local language codes to the translator language codes.'),
+          '#open' => TRUE,
         );
 
-        if (!empty($options)) {
-          $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#type'] = 'select';
-          $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#options'] = $options;
-          $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#empty_option'] = ' - ';
-          unset($form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#size']);
+        $options = $entity->getSupportedRemoteLanguages();
+        foreach ($entity->getRemoteLanguagesMappings() as $local_language => $remote_language) {
+          $form['plugin_wrapper']['remote_languages_mappings'][$local_language] = array(
+            '#type' => 'textfield',
+            '#title' => \Drupal::languageManager()
+              ->getLanguage($local_language)
+              ->getName() . ' (' . $local_language . ')',
+            '#default_value' => $remote_language,
+            '#size' => 6,
+          );
+
+          if (!empty($options)) {
+            $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#type'] = 'select';
+            $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#options'] = $options;
+            $form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#empty_option'] = ' - ';
+            unset($form['plugin_wrapper']['remote_languages_mappings'][$local_language]['#size']);
+          }
         }
       }
     }
@@ -201,15 +201,10 @@ class TranslatorForm extends EntityForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the complete form.
    */
-  public function updateRemoteLanguagesMappings(array $form, FormStateInterface $form_state) {
-    // After updating translator plugin, we have to empty remote languages
-    // mappings on it in order to retrieve new ones.
-    $this->entity->set('remote_languages_mappings', NULL);
-
+  public static function updateRemoteLanguagesMappings(array $form, FormStateInterface $form_state) {
     if (!empty($form_state->getUserInput()['remote_languages_mappings'])) {
       // The user input containing remote languages mappings from an old
-      // translator has priority over new mappings. Similarly to the action
-      // above, we have to remove it from here as well.
+      // translator, so We have to remove them from here.
       $user_input = $form_state->getUserInput();
       unset($user_input['remote_languages_mappings']);
       $form_state->setUserInput($user_input);
@@ -228,7 +223,6 @@ class TranslatorForm extends EntityForm {
     $plugin_ui = $this->translatorManager->createUIInstance($this->entity->getPluginID());
     $plugin_ui->validateConfigurationForm($form, $form_state);
   }
-
 
   /**
    * Overrides Drupal\Core\Entity\EntityForm::save().
@@ -254,12 +248,11 @@ class TranslatorForm extends EntityForm {
     $form_state->setRedirectUrl($this->entity->urlInfo('delete-form'));
   }
 
-
   /**
    * Ajax callback for loading the translator plugin settings form for the
    * currently selected translator plugin.
    */
-  function ajaxTranslatorPluginSelect(array $form, FormStateInterface $form_state) {
+  public static function ajaxTranslatorPluginSelect(array $form, FormStateInterface $form_state) {
     return $form['plugin_wrapper'];
   }
 

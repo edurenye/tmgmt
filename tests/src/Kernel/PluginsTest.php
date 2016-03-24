@@ -198,4 +198,53 @@ class PluginsTest extends TMGMTKernelTestBase {
       $this->assertEqual($plugin->unescapeText($escaped), $test['item']['#text']);
     }
   }
+
+  /**
+   * Tests language matching.
+   */
+  public function testLanguageMatching() {
+    // Exact match.
+    $language = 'en';
+    $remote_languages = ['en-GB-London' => 'English (London - United Kingdom)', 'en' => 'English'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en', $matching_language);
+
+    $language = 'en-US';
+    $remote_languages = ['en-GB' => 'English (United Kingdom)', 'en-US' => 'English (United States)'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en-US', $matching_language);
+
+    $language = 'en-GB-London';
+    $remote_languages = ['en-GB' => 'English (United Kingdom)', 'en-GB-London' => 'English (London - United Kingdom)'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en-GB-London', $matching_language);
+
+    // Partial match.
+    $language = 'en';
+    $remote_languages = ['en-GB' => 'English (United Kingdom)', 'en-US' => 'English (United States)'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en-GB', $matching_language);
+
+    $language = 'en-GB';
+    $remote_languages = ['en' => 'English', 'en-US' => 'English (United States)'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en', $matching_language);
+
+    $language = 'en';
+    $remote_languages = ['en-GB-London' => 'English (London - United Kingdom)', 'en-GB' => 'English (United Kingdom)'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en-GB', $matching_language);
+
+    // No match.
+    $language = 'en';
+    $remote_languages = ['es' => 'Spanish'];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en', $matching_language);
+
+    $language = 'en';
+    $remote_languages = [];
+    $matching_language = \Drupal::service('tmgmt.language_matcher')->getMatchingLangcode($language, $remote_languages);
+    $this->assertEquals('en', $matching_language);
+  }
+
 }

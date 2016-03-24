@@ -148,6 +148,15 @@ interface TranslatorInterface extends ConfigEntityInterface {
   public function getSupportedLanguagePairs();
 
   /**
+   * Gets all supported languages of the translator plugin.
+   *
+   * @return array
+   *   An array of language codes which are provided by the translator plugin
+   *   (remote language codes).
+   */
+  public function getSupportedRemoteLanguages();
+
+  /**
    * Clears the language cache for this translator.
    */
   public function clearLanguageCache();
