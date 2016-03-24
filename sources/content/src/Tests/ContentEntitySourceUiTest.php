@@ -100,7 +100,9 @@ class ContentEntitySourceUiTest extends EntityTestBase {
     $this->clickLink(t('Needs review'));
     $this->drupalPostForm(NULL, array(), t('Save as completed'));
 
-    $this->assertText(t('The translation for @title has been accepted.', array('@title' => $node->getTitle())));
+    $node = Node::load($node->id());
+    $translation = $node->getTranslation('de');
+    $this->assertText(t('The translation for @title has been accepted as @target.', array('@title' => $node->getTitle(), '@target' => $translation->label())));
 
     // German node should now be listed and be clickable.
     $this->clickLink('de(de-ch): ' . $node->label());
@@ -259,7 +261,10 @@ class ContentEntitySourceUiTest extends EntityTestBase {
       '@title' => $node->getTitle(),
       '@language' => t('Spanish')
     )));
-    $this->assertText(t('The translation for @title has been accepted.', array('@title' => $node->getTitle())));
+
+    $node = Node::load($node->id());
+    $translation = $node->getTranslation('es');
+    $this->assertText(t('The translation for @title has been accepted as @target.', array('@title' => $node->getTitle(), '@target' => $translation->label())));
 
     //Assert link is clickable.
     $this->clickLink($node->getTitle());
@@ -357,7 +362,8 @@ class ContentEntitySourceUiTest extends EntityTestBase {
       '@title' => $comment->getSubject(),
       '@language' => t('Spanish'),
     )));
-    $this->assertText(t('The translation for @title has been accepted.', array('@title' => $comment->getSubject())));
+
+    $this->assertText(t('The translation for @title has been accepted as es: @target.', array('@title' => $comment->getSubject(), '@target' => $comment->getSubject())));
 
     // The translated content should be in place.
     $this->clickLink('de(de-ch): ' . $comment->getSubject());

@@ -8,12 +8,14 @@
 namespace Drupal\tmgmt\Entity;
 
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\Language;
 use Drupal\tmgmt\JobItemInterface;
@@ -475,11 +477,35 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
   public function accepted($message = NULL, $variables = array(), $type = 'status') {
     if (!isset($message)) {
       $source_url = $this->getSourceUrl();
-      $message = $source_url ? 'The translation for <a href=":source_url">@source</a> has been accepted.' : 'The translation for @source has been accepted.';
-      $variables = $source_url ? array(
-        ':source_url' => $source_url->toString(),
-        '@source' => ($this->getSourceLabel()),
-      ) : array('@source' => ($this->getSourceLabel()));
+      try {
+        $translation = entity_load($this->getItemType(), $this->getItemId());
+      }
+      catch (PluginNotFoundException $e) {
+        $translation = NULL;
+      }
+      if (isset($translation)) {
+        $translation = $translation->getTranslation($this->getJob()->getTargetLangcode());
+        try {
+          $translation_url = $translation->toUrl();
+        }
+        catch (UndefinedLinkTemplateException $e) {
+          $translation_url = NULL;
+        }
+        $message = $source_url && $translation_url ? 'The translation for <a href=":source_url">@source</a> has been accepted as <a href=":target_url">@target</a>.' : 'The translation for @source has been accepted as @target.';
+        $variables = $translation_url ? array(
+          ':source_url' => $source_url->toString(),
+          '@source' => ($this->getSourceLabel()),
+          ':target_url' => $translation_url->toString(),
+          '@target' => $translation ? $translation->label() : $this->getSourceLabel(),
+        ) : array('@source' => ($this->getSourceLabel()), '@target' => ($translation ? $translation->label() : $this->getSourceLabel()));
+      }
+      else {
+        $message   = $source_url ? 'The translation for <a href=":source_url">@source</a> has been accepted.' : 'The translation for @source has been accepted.';
+        $variables = $source_url ? array(
+          ':source_url' => $source_url->toString(),
+          '@source'     => ($this->getSourceLabel()),
+        ) : array('@source' => ($this->getSourceLabel()));
+      }
     }
     $return = $this->setState(static::STATE_ACCEPTED, $message, $variables, $type);
     // Check if this was the last unfinished job item in this job.

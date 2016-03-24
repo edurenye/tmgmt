@@ -76,6 +76,6 @@ class ContentEntitySourceNoCanonicalLinkTest extends EntityTestBase {
     $this->clickLink('reviewed');
     $this->drupalPostForm(NULL, NULL, 'Save as completed');
     $this->assertTitle($entity->label() . ' (English to German, Finished) | Drupal');
-    $this->assertText('The translation for name english has been accepted.');
+    $this->assertText('The translation for name english has been accepted as de(de-ch): name english.');
   }
 }
