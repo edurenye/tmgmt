@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\tmgmt\SourcePreviewInterface;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\tmgmt_local\Entity\LocalTaskItem;
 use Drupal\tmgmt_local\LocalTaskInterface;
 use Drupal\views\Views;
@@ -246,10 +247,19 @@ class LocalTaskItemForm extends ContentEntityForm {
           '#allow_focus' => TRUE,
         ];
         if (!empty($data[$key]['#format']) && \Drupal::config('tmgmt.settings')->get('respect_text_format') == '1') {
-          $form[$target_key]['source']['#type'] = 'text_format';
-          $form[$target_key]['source']['#allowed_formats'] = [$data[$key]['#format']];
-          $form[$target_key]['translation']['#type'] = 'text_format';
-          $form[$target_key]['translation']['#allowed_formats'] = [$data[$key]['#format']];
+          $format_id = $data[$key]['#format'];
+          /** @var \Drupal\filter\Entity\FilterFormat $format */
+          $format = FilterFormat::load($format_id);
+
+          if ($format && $format->access('use')) {
+            // In case a user has permission to translate the content using
+            // selected text format, add a format id into the list of allowed
+            // text formats. Otherwise, no text format will be used.
+            $form[$target_key]['source']['#allowed_formats'] = [$format_id];
+            $form[$target_key]['translation']['#allowed_formats'] = [$format_id];
+            $form[$target_key]['source']['#type'] = 'text_format';
+            $form[$target_key]['translation']['#type'] = 'text_format';
+          }
         }
 
         $form[$target_key]['actions'] = array(

@@ -430,8 +430,21 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     list($first_task_item, $second_task_item) = array_values($task->getItems());
     $this->assertTrue($first_task_item->isClosed());
 
-    // Translate the second item but do not mark as translated it yet.
+    // Assert that translator can provide translations for a "Dummy" field. An
+    // empty text field should be displayed as translator does not have a
+    // permission to use "full_html" text format.
+    $second_task_item->updateData('dummy|deep_nesting', ['#format' => 'full_html']);
+    $second_task_item->save();
     $this->clickLink(t('Translate'));
+    $this->assertFieldByName('dummy|deep_nesting[translation]');
+    $this->assertRaw('Save as completed" class="button button--primary js-form-submit form-submit"');
+    $translation_field = $this->xpath('//*[@id="edit-dummydeep-nesting-translation"]')[0];
+    $this->assertEqual($translation_field, '');
+
+    // Translate the second item but do not mark as translated it yet.
+    $second_task_item->updateData('dummy|deep_nesting', ['#format' => 'basic_html']);
+    $second_task_item->save();
+    $this->drupalGet('translate/items/' . $second_task_item->id());
     $xpath = $this->xpath('//*[@id="edit-dummydeep-nesting-translation-format-guidelines"]/div')[0];
     $this->assertEqual($xpath[0]->h4[0], t('Basic HTML'));
     $edit = array(

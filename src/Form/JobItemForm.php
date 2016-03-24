@@ -10,6 +10,7 @@ namespace Drupal\tmgmt\Form;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\tmgmt\Entity\JobItem;
 use Drupal\tmgmt\JobItemInterface;
 use Drupal\tmgmt\SourcePreviewInterface;
@@ -165,7 +166,7 @@ class JobItemForm extends TmgmtFormBase {
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#value' => t('Save as completed'),
-      '#access' => $item->isNeedsReview(),
+      '#access' => $item->isNeedsReview() && !$form_state->has('accept_item'),
       '#validate' => array('::validateForm', '::validateJobItem'),
       '#submit' => array('::submitForm', '::save'),
     );
@@ -411,6 +412,18 @@ class JobItemForm extends TmgmtFormBase {
         $form[$target_key]['actions'] = array(
           '#type' => 'container',
         );
+
+        // Check if the field has a text format attached.
+        if (!empty($data[$key]['#format'])) {
+          $format_id = $data[$key]['#format'];
+          /** @var \Drupal\filter\Entity\FilterFormat $format */
+          $format = FilterFormat::load($format_id);
+
+          if (!$format || !$format->access('use')) {
+            $form[$target_key]['actions']['#access'] = FALSE;
+            $form_state->set('accept_item', FALSE);
+          }
+        }
         if (!$job_item->isAccepted()) {
           if ($data[$key]['#status'] != TMGMT_DATA_ITEM_STATE_REVIEWED) {
             $form[$target_key]['actions']['reviewed'] = array(
@@ -508,7 +521,7 @@ class JobItemForm extends TmgmtFormBase {
         } elseif ($rows > 15) {
           $rows = 15;
         }
-        if (!empty($data[$key]['#format']) && \Drupal::config('tmgmt.settings')->get('respect_text_format') == '1') {
+        if (!empty($data[$key]['#format']) && \Drupal::config('tmgmt.settings')->get('respect_text_format') == '1' && !$form_state->has('accept_item')) {
           $form[$target_key]['translation'] = array(
             '#type' => 'text_format',
             '#default_value' => isset($data[$key]['#translation']['#text']) ? $data[$key]['#translation']['#text'] : NULL,
@@ -516,6 +529,15 @@ class JobItemForm extends TmgmtFormBase {
             '#disabled' => $job_item->isAccepted(),
             '#rows' => $rows,
             '#allowed_formats' => array($data[$key]['#format']),
+          );
+        }
+        elseif ($form_state->has('accept_item')) {
+          $form[$target_key]['translation'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Translation'),
+            '#value' => t('This field has been disabled because you do not have sufficient permissions to edit it. It is not possible to review or accept this job item.'),
+            '#disabled' => TRUE,
+            '#rows' => $rows,
           );
         }
         else {
@@ -532,7 +554,7 @@ class JobItemForm extends TmgmtFormBase {
           }
         }
 
-        if (!empty($data[$key]['#format']) && \Drupal::config('tmgmt.settings')->get('respect_text_format') == '1') {
+        if (!empty($data[$key]['#format']) && \Drupal::config('tmgmt.settings')->get('respect_text_format') == '1' && !$form_state->has('accept_item')) {
           $form[$target_key]['source'] = array(
             '#type' => 'text_format',
             '#default_value' => $data[$key]['#text'],
@@ -540,6 +562,15 @@ class JobItemForm extends TmgmtFormBase {
             '#disabled' => TRUE,
             '#rows' => $rows,
             '#allowed_formats' => array($data[$key]['#format']),
+          );
+        }
+        elseif ($form_state->has('accept_item')) {
+          $form[$target_key]['source'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Source'),
+            '#value' => t('This field has been disabled because you do not have sufficient permissions to edit it. It is not possible to review or accept this job item.'),
+            '#disabled' => TRUE,
+            '#rows' => $rows,
           );
         }
         else {
