@@ -183,12 +183,28 @@ class ContentEntitySourceUiTest extends EntityTestBase {
 
     // Test that a job can not be accepted if the entity does not exist.
     $deleted_node = $this->createTranslatableNode('page', 'en');
+    $second_node = $this->createTranslatableNode('page', 'en');
     $this->drupalGet('node/' . $deleted_node->id() . '/translations');
     $edit = array(
       'languages[de]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Request translation'));
     $this->drupalPostForm(NULL, array(), t('Submit to provider'));
+    $edit = array(
+      'languages[fr]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Request translation'));
+    $this->drupalPostForm(NULL, [], t('Submit to provider'));
+
+    $job = $this->createJob('en', 'de');
+    $job->addItem('content', 'node', $deleted_node->id());
+    $job->addItem('content', 'node', $second_node->id());
+
+    $this->drupalGet($job->toUrl());
+    $this->drupalPostForm(NULL, [], t('Submit to provider'));
+    $this->assertText(t('1 conflicting item has been dropped.'));
+
+    $this->drupalGet('node/' . $deleted_node->id() . '/translations');
     $this->clickLink(t('Needs review'));
 
     // Delete the node and assert that the job can not be accepted.

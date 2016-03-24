@@ -97,6 +97,25 @@ class TMGMTCartTest extends TMGMTTestBase {
     $this->drupalGet('admin/tmgmt/cart');
     $this->assertText($node_cs->getTitle());
     $this->assertNoText($node_sk->getTitle());
+
+    // Test that duplicate submission of an item is not allowed.
+    $this->drupalPostForm('admin/tmgmt/cart', array(
+      'target_language[]' => array('es'),
+    ), t('Request translation'));
+    $this->drupalPostForm(NULL, array(), t('Submit to provider'));
+    $this->assertText(t('Test translation created.'));
+
+    $job_item_cs = tmgmt_job_item_create('content', 'node', $node_cs->id());
+    $job_item_cs->save();
+    $this->drupalGet('tmgmt-add-to-cart/' . $job_item_cs->id());
+    $job_items_data[$job_item_cs->getItemId()] = $job_item_cs->getItemType();
+
+    $this->drupalPostForm('admin/tmgmt/cart', array(
+      'target_language[]' => array('es'),
+    ), t('Request translation'));
+    $this->assertText(t('1 item conflict with pending item and will be dropped on submission.'));
+    $this->drupalPostForm(NULL, array(), t('Submit to provider'));
+    $this->assertText(t('All job items are conflicting, the job can not be submitted.'));
   }
 
 }

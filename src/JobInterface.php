@@ -723,4 +723,15 @@ interface JobInterface extends ContentEntityInterface, EntityOwnerInterface {
    */
   public static function getStates();
 
+  /**
+   * Returns conflicting job item IDs.
+   *
+   * Conflicting job items are those that already have an identical item
+   * in another job that is not yet finished.
+   *
+   * @return int[]
+   *   List of conflicting job item IDs.
+   */
+  public function getConflictingItemIds();
+
 }

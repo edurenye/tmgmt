@@ -7,8 +7,8 @@
 
 namespace Drupal\tmgmt\Form;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -206,6 +206,21 @@ class JobForm extends TmgmtFormBase {
         '#prefix' => '<div id="tmgmt-ui-owner" class="tmgmt-ui-owner tmgmt-ui-info-item">',
         '#suffix' => '</div>',
       );
+    }
+
+    if(!$job->isContinuous()) {
+      // Checkout whether given source already has items in translation.
+      $num_of_existing_items = count($job->getConflictingItemIds());
+      $form['message'] = array(
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => \Drupal::translation()->formatPlural($num_of_existing_items, '1 item conflict with pending item and will be dropped on submission.', '@count items conflict with pending items and will be dropped on submission.'),
+        '#prefix' => '<div class="messages existing-items messages--warning hidden">',
+        '#suffix' => '</div>',
+      );
+      if ($num_of_existing_items) {
+        $form['message']['#prefix'] = '<div class="messages existing-items messages--warning">';
+      }
     }
 
     // Display created time only for jobs that are not new anymore.
@@ -495,6 +510,17 @@ class JobForm extends TmgmtFormBase {
         $form_state->setErrorByName('translator', $translatable_status->getReason());
       }
     }
+
+    if (!$job->isContinuous() && isset($form['actions']['submit']) && $form_state->getTriggeringElement()['#value'] == $form['actions']['submit']['#value']) {
+      $existing_items_ids = $job->getConflictingItemIds();
+      $form_state->set('existing_item_ids', $existing_items_ids);
+
+      // If the amount of existing items is the same as the total job item count
+      // then the job can not be submitted.
+      if (count($job->getItems()) == count($existing_items_ids)) {
+        $form_state->setErrorByName('target_language', $this->t('All job items are conflicting, the job can not be submitted.'));
+      }
+    }
   }
 
   /**
@@ -530,6 +556,15 @@ class JobForm extends TmgmtFormBase {
     // Everything below this line is only invoked if the 'Submit to provider'
     // button was clicked.
     if (isset($form['actions']['submit']) && $form_state->getTriggeringElement()['#value'] == $form['actions']['submit']['#value']) {
+
+      // Delete conflicting items.
+      if ($existing_items_ids = $form_state->get('existing_item_ids')) {
+        $storage = \Drupal::entityTypeManager()->getStorage('tmgmt_job_item');
+        $storage->delete($storage->loadMultiple($existing_items_ids));
+        $num_of_items = count($existing_items_ids);
+        drupal_set_message(\Drupal::translation()->formatPlural($num_of_items, '1 conflicting item has been dropped.', '@count conflicting items have been dropped.'), 'warning');
+      }
+
       if (!tmgmt_job_request_translation($this->entity)) {
         // Don't redirect the user if the translation request failed but retain
         // existing destination parameters so we can redirect once the request
@@ -607,10 +642,18 @@ class JobForm extends TmgmtFormBase {
    * target / source language dropdowns.
    */
   public function ajaxLanguageSelect(array $form, FormStateInterface $form_state) {
+    $number_of_existing_items = count($this->entity->getConflictingItemIds());
     $replace = $form_state->getUserInput()['_triggering_element_name'] == 'source_language' ? 'target_language' : 'source_language';
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#tmgmt-ui-translator-wrapper', $form['translator_wrapper']));
     $response->addCommand(new ReplaceCommand('#tmgmt-ui-' . str_replace('_', '-', $replace), $form['info'][$replace]));
+    if ($number_of_existing_items) {
+      $response->addCommand(new InvokeCommand('.existing-items', 'removeClass', array('hidden')));
+      $response->addCommand(new ReplaceCommand('.existing-items > div', \Drupal::translation()->formatPlural($number_of_existing_items, '1 item conflict with pending item and will be dropped on submission.', '@count items conflict with pending items and will be dropped on submission.')));
+    }
+    else {
+      $response->addCommand(new InvokeCommand('.existing-items', 'addClass', array('hidden')));
+    }
     return $response;
   }
 

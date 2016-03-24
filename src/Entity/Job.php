@@ -233,7 +233,8 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
   /**
    * {@inheritdoc}
    */
-  public static function postDelete(EntityStorageInterface $storage_controller, array $entities) {
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
     // Since we are deleting one or multiple jobs here we also need to delete
     // the attached job items and messages.
     $tjiids = \Drupal::entityQuery('tmgmt_job_item')
@@ -951,6 +952,33 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
       static::STATE_CONTINUOUS => t('Continuous'),
       static::STATE_CONTINUOUS_INACTIVE => t('Continuous Inactive'),
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConflictingItemIds() {
+    $conflicting_item_ids = array();
+    foreach ($this->getItems() as $item) {
+      // Count existing job items that are have the same languages, same source,
+      // are active or in review and are not the job item that we are checking.
+      $existing_items_count = \Drupal::entityQuery('tmgmt_job_item')
+        ->condition('state', [JobItemInterface::STATE_ACTIVE, JobItemInterface::STATE_REVIEW], 'IN')
+        ->condition('plugin', $item->getPlugin())
+        ->condition('item_type', $item->getItemType())
+        ->condition('item_id', $item->getItemId())
+        ->condition('tjiid', $item->id(), '<>')
+        ->condition('tjid.entity.source_language', $this->getSourceLangcode())
+        ->condition('tjid.entity.target_language', $this->getTargetLangcode())
+        ->count()
+        ->execute();
+
+      // If there are any, this is a conflicting job item.
+      if ($existing_items_count) {
+        $conflicting_item_ids[] = $item->id();
+      }
+    }
+    return $conflicting_item_ids;
   }
 
 }

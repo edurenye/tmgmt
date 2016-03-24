@@ -6,8 +6,6 @@ use Drupal\tmgmt\Tests\EntityTestBase;
 
 /**
  * Base class for local translator tests.
- *
- * @group tmgmt
  */
 abstract class LocalTranslatorTestBase extends EntityTestBase {
 

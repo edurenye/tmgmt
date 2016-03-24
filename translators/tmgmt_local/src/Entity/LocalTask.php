@@ -384,8 +384,8 @@ class LocalTask extends ContentEntityBase implements LocalTaskInterface {
   /**
    * {@inheritdoc}
    */
-  public static function postDelete(EntityStorageInterface $storage_controller, array $entities) {
-    parent::postDelete($storage_controller, $entities);
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
     $ids = \Drupal::entityQuery('tmgmt_local_task_item')
       ->condition('tltid', array_keys($entities), 'IN')
       ->execute();

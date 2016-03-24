@@ -132,7 +132,7 @@ class TMGMTUiTest extends EntityTestBase {
     // Another job.
     $previous_tjid = $job->id();
     $job = tmgmt_job_match_item('en', '');
-    $job->addItem('test_source', 'test', 1);
+    $job->addItem('test_source', 'test', 9);
     $this->assertNotEqual($job->id(), $previous_tjid);
 
     // Go to checkout form.
@@ -141,7 +141,7 @@ class TMGMTUiTest extends EntityTestBase {
 
      // Check checkout form.
     $this->assertText('You can provide a label for this job in order to identify it easily later on.');
-    $this->assertText('test_source:test:1');
+    $this->assertText('test_source:test:9');
 
     $edit = array(
       'target_language' => 'es',
@@ -154,7 +154,7 @@ class TMGMTUiTest extends EntityTestBase {
 
     // Another job.
     $job = tmgmt_job_match_item('en', 'es');
-    $job->addItem('test_source', 'test', 1);
+    $job->addItem('test_source', 'test', 10);
 
     // Go to checkout form.
     $redirects = tmgmt_job_checkout_multiple(array($job));
@@ -162,7 +162,7 @@ class TMGMTUiTest extends EntityTestBase {
 
      // Check checkout form.
     $this->assertText('You can provide a label for this job in order to identify it easily later on.');
-    $this->assertText('test_source:test:1');
+    $this->assertText('test_source:test:10');
 
     $edit = array(
       'settings[action]' => 'reject',
@@ -237,7 +237,7 @@ class TMGMTUiTest extends EntityTestBase {
 
     // Another job.
     $job = tmgmt_job_match_item('en', 'es');
-    $job->addItem('test_source', 'test', 1);
+    $job->addItem('test_source', 'test', 11);
 
     // Go to checkout form.
     $redirects = tmgmt_job_checkout_multiple(array($job));
@@ -245,7 +245,7 @@ class TMGMTUiTest extends EntityTestBase {
 
      // Check checkout form.
     $this->assertText('You can provide a label for this job in order to identify it easily later on.');
-    $this->assertText('test_source:test:1');
+    $this->assertText('test_source:test:11');
 
     $edit = array(
       'settings[action]' => 'fail',
@@ -260,7 +260,7 @@ class TMGMTUiTest extends EntityTestBase {
 
     // Another job.
     $job = tmgmt_job_match_item('en', 'es');
-    $job->addItem('test_source', 'test', 1);
+    $job->addItem('test_source', 'test', 12);
 
     // Go to checkout form.
     $redirects = tmgmt_job_checkout_multiple(array($job));
@@ -268,7 +268,7 @@ class TMGMTUiTest extends EntityTestBase {
 
     // Check checkout form.
     $this->assertText('You can provide a label for this job in order to identify it easily later on.');
-    $this->assertText('test_source:test:1');
+    $this->assertText('test_source:test:12');
 
     $edit = array(
       'settings[action]' => 'not_translatable',
@@ -283,7 +283,7 @@ class TMGMTUiTest extends EntityTestBase {
     $this->default_translator->setSetting('action', 'reject');
     $this->default_translator->save();
     $job = tmgmt_job_match_item('en', 'es');
-    $job->addItem('test_source', 'test', 1);
+    $job->addItem('test_source', 'test', 13);
 
     // Go to checkout form.
     $redirects = tmgmt_job_checkout_multiple(array($job));
@@ -291,7 +291,7 @@ class TMGMTUiTest extends EntityTestBase {
 
      // Check checkout form.
     $this->assertText('You can provide a label for this job in order to identify it easily later on.');
-    $this->assertText('test_source:test:1');
+    $this->assertText('test_source:test:13');
 
     // The action should now default to reject.
     $this->drupalPostForm(NULL, array(), t('Submit to provider'));
@@ -348,7 +348,7 @@ class TMGMTUiTest extends EntityTestBase {
     $start_rows = $this->xpath('//tbody/tr');
     $this->assertEqual(count($start_rows), 5);
     $this->drupalGet($job4->urlInfo('delete-form'));
-    $this->assertText('Are you sure you want to delete the translation job test_source:test:1 and 2 more?');
+    $this->assertText('Are you sure you want to delete the translation job test_source:test:11 and 2 more?');
     $this->drupalPostForm(NULL, array(), t('Delete'));
     $this->drupalGet('admin/tmgmt/jobs', array('query' => array(
       'state' => 'All',
