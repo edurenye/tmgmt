@@ -927,7 +927,7 @@ display:
         title: Jobs
         description: 'Manage and review existing translation jobs.'
         parent: tmgmt.admin_tmgmt
-        weight: -100
+        weight: 10
         context: '0'
         menu_name: admin
       tab_options:

@@ -1029,7 +1029,7 @@ display:
         description: 'Overview of existing job items.'
         expanded: false
         parent: tmgmt.admin_tmgmt
-        weight: -80
+        weight: 5
         context: '0'
         menu_name: admin
     cache_metadata:

@@ -26,10 +26,10 @@ tmgmt.translators:
   route_name: entity.tmgmt_translator.collection
   base_route: view.tmgmt_job_overview.page_1
   title: Providers
-  weight: 25
+  weight: 90
 
 tmgmt.settings:
   route_name: tmgmt.settings
   base_route: view.tmgmt_job_overview.page_1
   title: Settings
-  weight: 30
+  weight: 100

@@ -112,7 +112,7 @@ function tmgmt_local_menu_links_discovered_alter(&$links) {
       'route_name' => $view->getUrl(NULL, 'unassigned')->getRouteName(),
       'parent' => 'tmgmt.admin_tmgmt',
       'menu_name' => 'admin',
-      'weight' => 10,
+      'weight' => 50,
     ];
   }
   if ($view = Views::getView('tmgmt_local_task_overview')) {
@@ -122,7 +122,7 @@ function tmgmt_local_menu_links_discovered_alter(&$links) {
       'route_name' => $view->getUrl(NULL, 'unassigned')->getRouteName(),
       'parent' => 'tmgmt.admin_tmgmt',
       'menu_name' => 'admin',
-      'weight' => 20,
+      'weight' => 55,
     ];
     if (!\Drupal::config('tmgmt_local.settings')->get('use_admin_theme')) {
       $links['tmgmt_local_task_overview']['menu_name'] = 'account';
