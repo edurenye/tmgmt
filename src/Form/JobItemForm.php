@@ -7,13 +7,16 @@
 
 namespace Drupal\tmgmt\Form;
 
+use Drupal\Component\Diff\Diff;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\filter\Entity\FilterFormat;
+use \Drupal\Core\Diff\DiffFormatter;
 use Drupal\tmgmt\Entity\JobItem;
 use Drupal\tmgmt\JobItemInterface;
 use Drupal\tmgmt\SourcePreviewInterface;
+use Drupal\tmgmt\TMGMTException;
 use Drupal\tmgmt\TranslatorRejectDataInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -122,6 +125,7 @@ class JobItemForm extends TmgmtFormBase {
     );
     // Build the review form.
     $data = $item->getData();
+    $this->trackChangedSource(\Drupal::service('tmgmt.data')->flatten($data), $form_state);
     // Need to keep the first hierarchy. So flatten must take place inside
     // of the foreach loop.
     $zebra = 'even';
@@ -583,15 +587,97 @@ class JobItemForm extends TmgmtFormBase {
           );
         }
 
-        if(isset($form_state->get('validation_messages')[$target_key])) {
+        // Check for source changes and offer actions.
+        if (isset($form_state->get('source_changed')[$target_key])) {
+          // Show diff if requested.
+          if ($form_state->get('show_diff:' . $key)) {
+            $keys = \Drupal::service('tmgmt.data')->ensureArrayKey($target_key);
+
+            try {
+              $new_data = \Drupal::service('tmgmt.data')->flatten($job_item->getSourceData());
+            }
+            catch (TMGMTException $e) {
+              $new_data = [];
+            }
+
+            $current_data = $job_item->getData($keys);
+
+            $diff_header = ['', t('Current text'), '', t('New text')];
+
+            $current_lines = explode("\n", $current_data['#text']);
+            $new_lines = explode("\n", isset($new_data[$key]) ? $new_data[$key]['#text'] : '');
+
+            $diff_formatter = new DiffFormatter($this->configFactory());
+            $diff = new Diff($current_lines, $new_lines);
+
+            $diff_rows = $diff_formatter->format($diff);
+            // Unset start block.
+            unset($diff_rows[0]);
+
+            $form[$target_key]['source_changed']['diff'] = [
+              '#type' => 'table',
+              '#header' => $diff_header,
+              '#rows' => $diff_rows,
+              '#empty' => $this->t('No visible changes'),
+              '#attributes' => [
+                'class' => ['diff'],
+              ],
+            ];
+            $form[$target_key]['source_changed']['#attached']['library'][] = 'system/diff';
+            $form[$target_key]['diff_actions'] = [
+              '#type' => 'container',
+            ];
+            $form[$target_key]['diff_actions']['resolve-diff'] = [
+              '#type' => 'submit',
+              '#value' => t('Resolve'),
+              '#attributes' => ['title' => t('Apply the changes of the source.')],
+              '#name' => 'resolve-diff-' . $target_key,
+              '#data_item_key' => $key,
+              '#submit' => ['::resolveDiff'],
+              '#ajax' => [
+                'callback' => '::ajaxReviewForm',
+                'wrapper' => $form['#ajaxid'],
+              ],
+            ];
+          }
+          else {
+            // Display changed message.
+            $form[$target_key]['source_changed'] = [
+              '#title' => t('Source changed'),
+              '#type' => 'item',
+              '#value' => $form_state->get('source_changed')[$target_key],
+            ];
+            $form[$target_key]['source_changed']['message'] = [
+              '#title' => t('Source changed'),
+              '#type' => 'item',
+              '#value' => $form_state->get('source_changed')[$target_key],
+            ];
+            if (!isset($form_state->get('source_removed')[$target_key])) {
+              // Offer resolve action.
+              $form[$target_key]['source_changed']['diff_button'] = [
+                '#type' => 'submit',
+                '#value' => t('Show change'),
+                '#name' => 'diff-button-' . $target_key,
+                '#data_item_key' => $key,
+                '#submit' => ['::showDiff'],
+                '#ajax' => [
+                  'callback' => '::ajaxReviewForm',
+                  'wrapper' => $form['#ajaxid'],
+                ],
+              ];
+            }
+          }
+        }
+
+        if (isset($form_state->get('validation_messages')[$target_key])) {
           $form[$target_key]['validation_message'] = array(
             '#title' => t('Validation message'),
             '#type' => 'item',
-            '#value' =>  htmlspecialchars($form_state->get('validation_messages')[$target_key]),
+            '#value' => htmlspecialchars($form_state->get('validation_messages')[$target_key]),
           );
         }
 
-        // Give the translator ui controller a chance to affect the data item element.
+        // Give the translator UI controller a chance to affect the data item element.
         if ($job_item->hasTranslator()) {
           $form[$target_key] = \Drupal::service('plugin.manager.tmgmt.translator')
             ->createUIInstance($job_item->getTranslator()->getPluginId())
@@ -723,6 +809,75 @@ class JobItemForm extends TmgmtFormBase {
       }
     }
     return $counted_tags;
+  }
+
+  /**
+   * Detect source changes and persist on $form_state.
+   *
+   * @param array $data
+   *   The data items.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function trackChangedSource(array $data, FormStateInterface $form_state) {
+    $item = $this->entity;
+    $source_changed = [];
+    $source_removed = [];
+    foreach ($data as $target_key => $value) {
+      if (is_array($value) && isset($value['#translate']) && $value['#translate']) {
+        $field = str_replace('][', '|', $target_key);
+        $key = \Drupal::service('tmgmt.data')->ensureArrayKey($field);
+        try {
+          $new_data = \Drupal::service('tmgmt.data')->flatten($item->getSourceData());
+        }
+        catch (TMGMTException $e) {
+          drupal_set_message(t('The source does not exist any more.'), 'error');
+          return;
+        }
+        $current_data = $item->getData($key);
+        if (!isset($new_data[$target_key])) {
+          $source_changed[$field] = t('This data item has been removed from the source.');
+          $source_removed[$field] = TRUE;
+        }
+        elseif ($current_data['#text'] != $new_data[$target_key]['#text']) {
+          $source_changed[$field] = t('The source has changed.');
+        }
+      }
+    }
+    $form_state->set('source_changed', $source_changed);
+    $form_state->set('source_removed', $source_removed);
+  }
+
+  /**
+   * Submit handler to show the diff table of the source.
+   */
+  public function showDiff(array $form, FormStateInterface $form_state) {
+    $target_key = $form_state->getTriggeringElement()['#data_item_key'];
+    $form_state->set('show_diff:' . $target_key, TRUE);
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Submit handler to resolve the diff updating the Job Item source.
+   */
+  public function resolveDiff(array $form, FormStateInterface $form_state) {
+    $item = $this->entity;
+    $target_key = $form_state->getTriggeringElement()['#data_item_key'];
+    $tmgmt_data_item = str_replace('][', '|', $target_key);
+    $key = \Drupal::service('tmgmt.data')->ensureArrayKey($tmgmt_data_item);
+    $first_key = reset($key);
+    $source_data = $item->getSourceData();
+    $new_data = \Drupal::service('tmgmt.data')->flatten($source_data)[$target_key];
+    $item->updateData($key, $new_data);
+    if (isset($source_data[$first_key]['#label'])) {
+      $item->addMessage('The conflict in the data item source "@data_item" has been resolved.', ['@data_item' => $source_data[$first_key]['#label']]);
+    }
+    else {
+      $item->addMessage('The conflict in the data item source has been resolved.');
+    }
+    $item->save();
+    $form_state->set('show_diff:' . $target_key, FALSE);
+    $form_state->setRebuild();
   }
 
 }

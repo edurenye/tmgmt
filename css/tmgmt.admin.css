@@ -55,6 +55,10 @@ table.tmgmt-ui-review tbody th {
   font-weight: bold;
 }
 
+.tmgmt-review-message-inline {
+  display: inline;
+}
+
 .tmgmt-ui-data-item-label .form-item {
   /* Get the label out of way, so the status icon can be placed at the same
   relative position */
@@ -229,4 +233,9 @@ td.views-field-tjid a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+ /* @todo Added while in core is set to "fixed". */
+.tmgmt-ui-review table.diff {
+  table-layout: auto;
 }

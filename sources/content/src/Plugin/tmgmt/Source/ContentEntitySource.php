@@ -77,7 +77,7 @@ class ContentEntitySource extends SourcePluginBase implements SourcePreviewInter
   public function getData(JobItemInterface $job_item) {
     $entity = entity_load($job_item->getItemType(), $job_item->getItemId());
     if (!$entity) {
-      throw new TMGMTException(t('Unable to load entity %type with id %id', array('%type' => $job_item->getItemType(), $job_item->getItemId())));
+      throw new TMGMTException(t('Unable to load entity %type with id %id', array('%type' => $job_item->getItemType(), '%id' => $job_item->getItemId())));
     }
     $languages = \Drupal::languageManager()->getLanguages();
     $id = $entity->language()->getId();

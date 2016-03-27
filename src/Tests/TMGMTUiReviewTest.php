@@ -584,4 +584,78 @@ class TMGMTUiReviewTest extends EntityTestBase {
     $translation_field = $this->xpath('//*[@id="edit-bodydeep-nesting-translation"]')[0];
     $this->assertEqual($translation_field, '');
   }
+
+  /**
+   * Tests update the source and show the diff of the source.
+   */
+  public function testSourceUpdate() {
+    // Create the original data items.
+    $job = $this->createJob('en', 'de');
+    $job->translator = $this->default_translator;
+    $job->save();
+    \Drupal::state()->set('tmgmt.test_source_data', [
+      'title' => [
+        '#label' => 'Example text 1',
+        'deep_nesting' => [
+          '#text' => 'Text for job item with type test and id 1.',
+          '#label' => 'Example text 1',
+          '#translate' => TRUE,
+        ],
+      ],
+      'sayonara_text' => [
+        '#label' => 'Example text 2',
+        'deep_nesting' => [
+          '#text' => 'This text will end badly.',
+          '#label' => 'Example text 2',
+          '#translate' => TRUE,
+        ],
+      ],
+    ]);
+    $job->addItem('test_source', 'test', '1');
+    $job->save();
+
+    $edit = array(
+      'target_language' => 'de',
+      'settings[action]' => 'submit',
+    );
+    $this->drupalPostForm('admin/tmgmt/jobs/' . $job->id(), $edit, t('Submit to provider'));
+
+    $job->requestTranslation();
+
+    // Modify the source.
+    \Drupal::state()->set('tmgmt.test_source_data', array(
+      'title' => array(
+        '#label' => 'Example text modified',
+        'deep_nesting' => array(
+          '#text' => 'This source has been changed.',
+          '#label' => 'Example text modified',
+          '#translate' => TRUE,
+        ),
+      ),
+    ));
+
+    // Show a message informing of the conflicts in the sources.
+    $this->drupalGet('admin/tmgmt/items/1');
+    $this->assertText('The source has changed.');
+    $this->assertText('This data item has been removed from the source.');
+
+    // Show changes as diff.
+    $this->drupalPostAjaxForm(NULL, [], 'diff-button-title|deep_nesting');
+    $this->assertNoText('The source has changed.');
+    $this->assertText('Text for job item with type test and id 1.');
+    $this->assertText('This source has been changed.');
+    $this->assertText('This data item has been removed from the source.');
+
+    // Resolve the first data item.
+    $this->drupalPostAjaxForm(NULL, [], 'resolve-diff-title|deep_nesting');
+    $this->assertText('The conflict in the data item source "Example text modified" has been resolved.');
+    $this->assertNoText('The source has changed.');
+    $xpath = $this->xpath('//*[@name="title|deep_nesting[source]"]')[0];
+    $this->assertEqual($xpath, 'This source has been changed.');
+
+    // Check the other data item was not modified.
+    $this->assertText('This data item has been removed from the source.');
+    $this->assertText('This text will end badly.');
+  }
+
 }

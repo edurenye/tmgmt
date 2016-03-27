@@ -239,6 +239,7 @@ function theme_tmgmt_translator_review_form($variables) {
   $result = '';
   $labels = '';
   $parent_label = '';
+  $source_changed = '';
   $validation_message = '';
   $element_groups = array();
   $element_group = '';
@@ -265,6 +266,18 @@ function theme_tmgmt_translator_review_form($variables) {
         $element_group = '<tr>' . tmgmt_build_table_cell($cell, TRUE) . '</tr>';
       }
     }
+    if (isset($element[$key]['source_changed'])) {
+      if (isset($element[$key]['source_changed']['message'])) {
+        $source_changed = '<div class="tmgmt_source_changed"><div class="messages messages--warning"><span class="tmgmt-review-message-inline"><span>' . $element[$key]['source_changed']['message']['#value'] . '</span>' . \Drupal::service('renderer')
+            ->render($element[$key]['source_changed']['diff_button']) . '</span></div></div>';
+        $diff_actions = '';
+      }
+      else {
+        $source_changed = \Drupal::service('renderer')->render($element[$key]['source_changed']);
+        $diff_actions = \Drupal::service('renderer')->render($element[$key]['diff_actions']);
+      }
+      $source_changed = '<tr><td></td><td colspan="2">' . $source_changed . '</td><td class="tmgmt-ui-data-item-actions">' . $diff_actions . '</td></tr>';
+    }
     if (isset($element[$key]['validation_message'])) {
       $validation_message = '<div class="tmgmt_validation_message"> <p class="messages messages--warning">' . $element[$key]['validation_message']['#value'] . '</p> </div>';
     }
@@ -272,7 +285,7 @@ function theme_tmgmt_translator_review_form($variables) {
   }
 
   // Append the last group to the group collection.
-  $element_groups[] = '<tbody>' . $element_group . '</tbody>';
+  $element_groups[] = '<tbody>' . $element_group . $source_changed . '</tbody>';
 
   // Display the label of all element groups inside a table header.
   if (!empty($parent_label)) {
