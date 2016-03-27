@@ -9,6 +9,7 @@ namespace Drupal\tmgmt;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\tmgmt\Entity\JobItem;
 
 /**
  * Default ui controller class for source plugin.
@@ -176,6 +177,87 @@ class SourcePluginUiBase extends PluginBase implements SourcePluginUiInterface {
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Builds the translation status render array with source and job item status.
+   *
+   * @param int $status
+   *   The source status: original, missing, current or outofdate.
+   * @param \Drupal\tmgmt\JobItemInterface|NULL $job_item
+   *   The existing job item for the source.
+   *
+   * @return array
+   *   The render array for displaying the status.
+   */
+  function buildTranslationStatus($status, JobItemInterface $job_item = NULL) {
+    switch ($status) {
+      case 'original':
+        $label = t('Source language');
+        $icon = 'core/misc/icons/bebebe/house.svg';
+        break;
+
+      case 'missing':
+        $label = t('Not translated');
+        $icon = 'core/misc/icons/bebebe/ex.svg';
+        break;
+
+      case 'outofdate':
+        $label = t('Translation Outdated');
+        $icon = drupal_get_path('module', 'tmgmt') . '/icons/outdated.svg';
+        break;
+
+      default:
+        $label = t('Translation up to date');
+        $icon = 'core/misc/icons/73b355/check.svg';
+    }
+
+    $build['source'] = [
+      '#theme' => 'image',
+      '#uri' => $icon,
+      '#title' => $label,
+      '#alt' => $label,
+    ];
+
+    // If we have an active job item, wrap it in a link.
+    if ($job_item) {
+      $states_labels = JobItem::getStates();
+      $state_label = $states_labels[$job_item->getState()];
+      $label = t('Active job item: @state', array('@state' => $state_label));
+      $url = $job_item->toUrl();
+      $job = $job_item->getJob();
+
+      switch ($job_item->getState()) {
+        case JobItem::STATE_ACTIVE:
+          if ($job->isUnprocessed()) {
+            $url = $job->toUrl();
+            $label = t('Active job item: @state', array('@state' => $state_label));
+          }
+          $icon = drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg';
+          break;
+
+        case JobItem::STATE_REVIEW:
+          $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
+          break;
+      }
+
+      $url->setOption('query', \Drupal::destination()->getAsArray());
+      $url->setOption('attributes', array('title' => $label));
+
+      $item_icon = [
+        '#theme' => 'image',
+        '#uri' => $icon,
+        '#title' => $label,
+        '#alt' => $label,
+      ];
+
+      $build['job_item'] = [
+        '#type' => 'link',
+        '#url' => $url,
+        '#title' => $item_icon,
+      ];
+    }
+    return $build;
   }
 
 }

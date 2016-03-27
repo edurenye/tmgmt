@@ -539,16 +539,6 @@ function tmgmt_theme() {
       'file' => 'tmgmt.theme.inc',
       'function' => 'theme_tmgmt_translator_review_form_element',
     ),
-    'tmgmt_translator_review_form_element_status' => array(
-      'render element' => 'status',
-      'file' => 'tmgmt.theme.inc',
-      'function' => 'theme_tmgmt_translator_review_form_element_status',
-    ),
-    'tmgmt_translation_language_status_single' => array(
-      'file' => 'tmgmt.theme.inc',
-      'variables' => array('translation_status' => NULL, 'job_item' => NULL),
-      'function' => 'theme_tmgmt_translation_language_status_single',
-    ),
     'tmgmt_progress_bar' => array(
       'variables' => array(
         'title' => NULL,

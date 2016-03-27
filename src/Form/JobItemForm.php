@@ -409,10 +409,7 @@ class JobItemForm extends TmgmtFormBase {
           '#parent_label' => $data[$key]['#parent_label'],
           '#zebra' => $zebra,
         );
-        $form[$target_key]['status'] = array(
-          '#theme' => 'tmgmt_translator_review_form_element_status',
-          '#value' => $job_item->isAccepted() ? TMGMT_DATA_ITEM_STATE_ACCEPTED : $data[$key]['#status'],
-        );
+        $form[$target_key]['status'] = $this->buildStatusRenderArray($job_item->isAccepted() ? TMGMT_DATA_ITEM_STATE_ACCEPTED : $data[$key]['#status']);
         $form[$target_key]['actions'] = array(
           '#type' => 'container',
         );
@@ -690,6 +687,52 @@ class JobItemForm extends TmgmtFormBase {
       }
     }
     return $form;
+  }
+
+  /**
+   * Builds the render array for the status icon.
+   *
+   * @param int $status
+   *   Data item status.
+   *
+   * @return array
+   *   The render array for the status icon.
+   */
+  protected function buildStatusRenderArray($status) {
+    $classes = array();
+    $classes[] = 'tmgmt-ui-icon';
+    // Icon size 32px square.
+    $classes[] = 'tmgmt-ui-icon-32';
+    switch ($status) {
+      case TMGMT_DATA_ITEM_STATE_ACCEPTED:
+        $title = t('Accepted');
+        $icon = 'core/misc/icons/73b355/check.svg';
+        break;
+      case TMGMT_DATA_ITEM_STATE_REVIEWED:
+        $title = t('Reviewed');
+        $icon = drupal_get_path('module', 'tmgmt') . '/icons/gray-check.svg';
+        break;
+      case TMGMT_DATA_ITEM_STATE_TRANSLATED:
+        $title = t('Translated');
+        $icon = drupal_get_path('module', 'tmgmt') . '/icons/ready.svg';
+        break;
+      case TMGMT_DATA_ITEM_STATE_PENDING:
+      default:
+        $title = t('Pending');
+        $icon = drupal_get_path('module', 'tmgmt') . '/icons/hourglass.svg';
+        break;
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => $classes],
+      'icon' => [
+        '#theme' => 'image',
+        '#uri' => $icon,
+        '#title' => $title,
+        '#alt' => $title,
+      ],
+    ];
   }
 
   /**

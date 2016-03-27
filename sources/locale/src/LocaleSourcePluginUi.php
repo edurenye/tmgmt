@@ -235,12 +235,8 @@ class LocaleSourcePluginUi extends SourcePluginUiBase {
 
 
     foreach (\Drupal::languageManager()->getLanguages() as $langcode => $language) {
-      $array = array(
-        '#theme' => 'tmgmt_translation_language_status_single',
-        '#translation_status' => $data['translation_statuses'][$langcode],
-        '#job_item' => isset($data['current_job_items'][$langcode]) ? $data['current_job_items'][$langcode] : NULL,
-      );
-      $row['langcode-' . $langcode] = \Drupal::service('renderer')->render($array);
+      $build = $this->buildTranslationStatus($data['translation_statuses'][$langcode], isset($data['current_job_items'][$langcode]) ? $data['current_job_items'][$langcode] : NULL);
+      $row['langcode-' . $langcode] = \Drupal::service('renderer')->render($build);
     }
 
     return $row;

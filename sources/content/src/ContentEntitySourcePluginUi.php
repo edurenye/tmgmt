@@ -177,15 +177,11 @@ class ContentEntitySourcePluginUi extends SourcePluginUiBase {
         }
       }
 
-      $array = array(
-        '#theme' => 'tmgmt_translation_language_status_single',
-        '#translation_status' => $translation_status,
-        '#job_item' => isset($current_job_items[$langcode]) ? $current_job_items[$langcode] : NULL,
-      );
-      $row['langcode-' . $langcode] = array(
-        'data' => \Drupal::service('renderer')->render($array),
+      $build = $this->buildTranslationStatus($translation_status, isset($current_job_items[$langcode]) ? $current_job_items[$langcode] : NULL);
+      $row['langcode-' . $langcode] = [
+        'data' => \Drupal::service('renderer')->render($build),
         'class' => array('langstatus-' . $langcode),
-      );
+      ];
     }
     return $row;
   }

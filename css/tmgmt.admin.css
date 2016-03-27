@@ -84,8 +84,10 @@ table.tmgmt-ui-review tbody th {
   text-align: center;
   border-style: solid;
   box-shadow: 0 0 4px rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 0 4px rgba(0,0,0,0.4);
-  -webkit-box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+
+.tmgmt-ui-icon img {
+  vertical-align: text-bottom;
 }
 
 /* Icon sizes. */
@@ -94,13 +96,7 @@ table.tmgmt-ui-review tbody th {
   height: 32px;
   border-width: 1px;
   line-height: 32px;
-  text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
   border-radius: 3px;
-  -moz-border-radius: 3px;
-}
-
-.tmgmt-ui-icon.tmgmt-ui-icon-32 span {
-  font-size: 23px;
 }
 
 .tmgmt-legend div {

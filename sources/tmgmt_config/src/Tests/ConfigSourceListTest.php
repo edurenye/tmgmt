@@ -252,7 +252,7 @@ class ConfigSourceListTest extends EntityTestBase {
     // Make sure that we're back on the originally defined destination URL.
     $this->assertUrl('admin/tmgmt/sources/config/_simple_config');
 
-    $overview_url = Url::fromRoute('tmgmt.source_overview', array('plugin' => 'config', 'item_type' => '_simple_config'))->getInternalPath();
+    $overview_url = Url::fromRoute('tmgmt.source_overview', array('plugin' => 'config', 'item_type' => '_simple_config'))->toString();
 
     // Translated languages should now be listed as Needs review.
     $this->assertRaw(SafeMarkup::format('href=":url" title="Active job item: Needs review"', array(':url' => JobItem::load(1)->urlInfo()->setOption('query',
