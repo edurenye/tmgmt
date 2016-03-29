@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Contains Drupal\Tests\tmgmt\Kernel\CrudTest.
+ * Contains \Drupal\tmgmt\tests\Kernel\CrudTest.
  */
 
 namespace Drupal\Tests\tmgmt\Kernel;
@@ -52,6 +51,35 @@ class CrudTest extends TMGMTKernelTestBase {
     // Delete the translator, make sure the translator is gone.
     $translator->delete();
     $this->assertNull(Translator::load($translator->id()));
+  }
+
+  /**
+   * Tests job item states for 'reject' / 'submit' settings action job states.
+   */
+  public function testRejectedJob() {
+    $job = $this->createJob();
+
+    // Change job state to 'reject' through the API and request a translation.
+    $job->translator = $this->default_translator->id();
+    $job->settings->action = 'reject';
+    $job->save();
+    $job_item = $job->addItem('test_source', 'type', 1);
+    $job->requestTranslation();
+
+    // Check that job is rejected and job item is NOT active.
+    $job = \Drupal::entityTypeManager()->getStorage('tmgmt_job')->loadUnchanged($job->id());
+    $this->assertTrue($job->isRejected());
+    $job_item = \Drupal::entityTypeManager()->getStorage('tmgmt_job_item')->loadUnchanged($job_item->id());
+    $this->assertTrue($job_item->isInactive());
+
+    // Change job state to 'submit' through the API and request a translation.
+    $job->settings->action = 'submit';
+    $job->save();
+    $job->requestTranslation();
+
+    // Check that job is active and job item IS active.
+    $this->assertTrue($job->isActive());
+    $this->assertTrue($job_item->isActive());
   }
 
   /**

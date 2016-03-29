@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Contains \Drupal\tmgmt\Entity\Controller\JobItemAccessControlHandler.
@@ -14,7 +13,7 @@ use Drupal\Core\Access\AccessResult;
 /**
  * Access control handler for the job item entity.
  *
- * @see \Drupal\tmgmt\Plugin\Core\Entity\Job.
+ * @see \Drupal\tmgmt\Entity\Job.
  */
 class JobItemAccessControlHandler extends JobAccessControlHandler {
 

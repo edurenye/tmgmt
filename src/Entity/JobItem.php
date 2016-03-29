@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Contains Drupal\tmgmt\Plugin\Core\Entity\JobItem.
+ * Contains \Drupal\tmgmt\Entity\JobItem.
  */
 
 namespace Drupal\tmgmt\Entity;

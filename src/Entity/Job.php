@@ -1,8 +1,7 @@
 <?php
-
-/*
+/**
  * @file
- * Contains Drupal\tmgmt\Plugin\Core\Entity\Job.
+ * Contains \Drupal\tmgmt\Entity\Job.
  */
 
 namespace Drupal\tmgmt\Entity;
@@ -704,7 +703,8 @@ class Job extends ContentEntityBase implements EntityOwnerInterface, JobInterfac
     if ($this->isContinuous() && !$this->isContinuousInactive() && !$this->isAborted()) {
       $this->state = Job::STATE_CONTINUOUS;
     }
-    if ($this->isActive() && $this->original->isUnprocessed()) {
+    // Activate job item if the previous job state was not active.
+    if ($this->isActive() && !$this->original->isActive()) {
       foreach ($this->getItems() as $item) {
         // The job was submitted, activate any inactive job item.
         if ($item->isInactive()) {

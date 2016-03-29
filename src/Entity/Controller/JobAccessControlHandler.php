@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Contains \Drupal\tmgmt\Entity\Controller\JobAccessControlHandler.
@@ -15,7 +14,7 @@ use Drupal\Core\Session\AccountInterface;
 /**
  * Access control handler for the job entity.
  *
- * @see \Drupal\tmgmt\Plugin\Core\Entity\Job.
+ * @see \Drupal\tmgmt\Entity\Job.
  */
 class JobAccessControlHandler extends EntityAccessControlHandler {
 

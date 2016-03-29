@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Contains Drupal\tmgmt\Tests\TMGMTUiTest.
+ * Contains \Drupal\tmgmt\Tests\TMGMTUiTest.
  */
 
 namespace Drupal\tmgmt\Tests;
