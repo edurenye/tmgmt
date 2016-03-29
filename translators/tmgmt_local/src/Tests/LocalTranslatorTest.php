@@ -154,16 +154,26 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     $job = $this->createJob();
     $job->translator = $translator->id();
     $job->addItem('test_source', 'test', '1');
-    \Drupal::state()->set('tmgmt.test_source_data', array(
-      'dummy' => array(
-        'deep_nesting' => array(
+    \Drupal::state()->set('tmgmt.test_source_data', [
+      'dummy' => [
+        'deep_nesting' => [
           '#text' => file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'),
           '#label' => 'Label for job item with type test and id 2.',
           '#translate' => TRUE,
           '#format' => 'basic_html',
-        ),
-      ),
-    ));
+        ],
+      ],
+      'second' => [
+        '#text' => 'second text',
+        '#label' => 'Second label',
+        '#translate' => TRUE,
+      ],
+      'third' => [
+        '#text' => 'third text',
+        '#label' => 'Third label',
+        '#translate' => TRUE,
+      ],
+    ]);
     $job->addItem('test_source', 'test', '2');
     $job->save();
 
@@ -447,6 +457,18 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     $this->drupalGet('translate/items/' . $second_task_item->id());
     $xpath = $this->xpath('//*[@id="edit-dummydeep-nesting-translation-format-guidelines"]/div')[0];
     $this->assertEqual($xpath[0]->h4[0], t('Basic HTML'));
+
+    // Assert the order of the displayed elements.
+    $translate_elements = $this->xpath('//*[@id="edit-translation"]/table');
+
+    $ids = [];
+    foreach ($translate_elements as $translate_element) {
+      $ids[] = (string) $translate_element['id'];
+    }
+    $this->assertEqual($ids[0], 'tmgmt-local-element-dummy-deep-nesting');
+    $this->assertEqual($ids[1], 'tmgmt-local-element-second');
+    $this->assertEqual($ids[2], 'tmgmt-local-element-third');
+
     $edit = array(
       'dummy|deep_nesting[translation][value]' => $translation2 = 'German translation of source 2',
     );
@@ -491,7 +513,11 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     // Mark the second item as completed now.
     $this->clickLink(t('View'));
     $this->clickLink(t('Translate'));
-    $this->drupalPostForm(NULL, array(), t('Save as completed'));
+    $remaining_translations = [
+      'second[translation]' => 'Third translation',
+      'third[translation]' => 'Third translation',
+    ];
+    $this->drupalPostForm(NULL, $remaining_translations, t('Save as completed'));
     $this->assertText('The translation for ' . $second_task_item->label() . ' has been saved as completed.');
     $this->clickLink('View');
 

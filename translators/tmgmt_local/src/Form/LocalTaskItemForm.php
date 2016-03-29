@@ -132,8 +132,7 @@ class LocalTaskItemForm extends ContentEntityForm {
     // Need to keep the first hierarchy. So flatten must take place inside
     // of the foreach loop.
     $zebra = 'even';
-    // Reverse the order to get the correct order.
-    foreach (array_reverse(Element::children($data)) as $key) {
+    foreach (Element::children($data) as $key) {
       $flattened = \Drupal::service('tmgmt.data')->flatten($data[$key], $key);
       $form['translation'][$key] = $this->formElement($flattened, $task_item, $zebra);
     }

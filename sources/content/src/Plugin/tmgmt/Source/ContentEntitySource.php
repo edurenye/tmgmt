@@ -91,6 +91,37 @@ class ContentEntitySource extends SourcePluginBase implements SourcePreviewInter
 
     $translation = $entity->getTranslation($job_item->getJob()->getSourceLangcode());
     $data = $this->extractTranslatableData($translation);
+    $entity_form_display = entity_get_form_display($job_item->getItemType(), $entity->bundle(), 'default');
+    uksort($data, function ($a, $b) use ($entity_form_display) {
+      $a_weight = NULL;
+      $b_weight = NULL;
+      // Get the weights.
+      if ($entity_form_display->getComponent($a) && !is_null($entity_form_display->getComponent($a)['weight'])) {
+        $a_weight = (int) $entity_form_display->getComponent($a)['weight'];
+      }
+      if ($entity_form_display->getComponent($b) && !is_null($entity_form_display->getComponent($b)['weight'])) {
+        $b_weight = (int) $entity_form_display->getComponent($b)['weight'];
+      }
+
+      // If neither field has a weight, sort alphabetically.
+      if ($a_weight === NULL && $b_weight === NULL) {
+        return ($a > $b) ? 1 : -1;
+      }
+      // If one of them has no weight, the other comes first.
+      elseif ($a_weight === NULL) {
+        return 1;
+      }
+      elseif ($b_weight === NULL) {
+        return -1;
+      }
+      // If both have a weight, sort by weight.
+      elseif ($a_weight == $b_weight) {
+        return 0;
+      }
+      else {
+        return ($a_weight > $b_weight) ? 1 : -1;
+      }
+    });
     return $data;
   }
 

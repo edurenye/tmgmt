@@ -783,4 +783,93 @@ class ContentEntitySourceUiTest extends EntityTestBase {
     $this->assertText($updated_body, 'Source updated correctly.');
   }
 
+  /**
+   * Test consider field sequences.
+   */
+  public function testConsiderFieldSequences() {
+    $this->createNodeType('article1', 'Article 1', TRUE, FALSE);
+
+    for ($i = 0; $i <= 5; $i++) {
+      // Create a field.
+      $field_storage = FieldStorageConfig::create(array(
+        'field_name' => 'field_' . $i,
+        'entity_type' => 'node',
+        'type' => 'text',
+        'cardinality' => mt_rand(1, 5),
+        'translatable' => TRUE,
+      ));
+      $field_storage->save();
+
+      // Create an instance of the previously created field.
+      $field = FieldConfig::create(array(
+        'field_name' => 'field_' . $i,
+        'entity_type' => 'node',
+        'bundle' => 'article1',
+        'label' => 'Field' . $i,
+        'description' => $this->randomString(30),
+        'widget' => array(
+          'type' => 'text',
+          'label' => $this->randomString(10),
+        ),
+      ));
+      $field->save();
+      $this->field_names['node']['article1'][] = 'field_' . $i;
+    }
+
+    $node = $this->createTranslatableNode('article1', 'en');
+
+    entity_get_form_display('node', 'article1', 'default')
+      ->setComponent('body', array(
+        'type' => 'text_textarea_with_summary',
+        'weight' => 0,
+      ))
+      ->setComponent('title', array(
+        'type' => 'string_textfield',
+        'weight' => 1,
+      ))
+      ->setComponent('field_1', array(
+        'type' => 'string_textfield',
+        'weight' => 2,
+      ))
+      ->setComponent('field_2', array(
+        'type' => 'string_textfield',
+        'weight' => 5,
+      ))
+      ->setComponent('field_0', array(
+        'type' => 'string_textfield',
+        'weight' => 6,
+      ))
+      ->setComponent('field_4', array(
+        'type' => 'string_textfield',
+        'weight' => 7,
+      ))
+      ->save();
+
+    $job = $this->createJob('en', 'de');
+    $job->translator = $this->default_translator->id();
+    $job->addItem('content', $node->getEntityTypeId(), $node->id());
+    $job->save();
+
+    $job->requestTranslation();
+
+    // Visit job item review page.
+    $this->drupalGet(URL::fromRoute('entity.tmgmt_job_item.canonical', ['tmgmt_job_item' => $node->id()]));
+    $review_elements = $this->xpath('//*[@id="edit-review"]/div');
+
+    $ids = [];
+    foreach ($review_elements as $review_element) {
+      $ids[] = (string) $review_element['id'];
+    }
+    // Check are fields showing on page in desired order. Field 3 and 5 have
+    // no weight set and are expected to be ordered alphabetically, at the end.
+    $this->assertEqual($ids[0], 'tmgmt-ui-element-body-wrapper');
+    $this->assertEqual($ids[1], 'tmgmt-ui-element-title-wrapper');
+    $this->assertEqual($ids[2], 'tmgmt-ui-element-field-1-wrapper');
+    $this->assertEqual($ids[3], 'tmgmt-ui-element-field-2-wrapper');
+    $this->assertEqual($ids[4], 'tmgmt-ui-element-field-0-wrapper');
+    $this->assertEqual($ids[5], 'tmgmt-ui-element-field-4-wrapper');
+    $this->assertEqual($ids[6], 'tmgmt-ui-element-field-3-wrapper');
+    $this->assertEqual($ids[7], 'tmgmt-ui-element-field-5-wrapper');
+  }
+
 }
