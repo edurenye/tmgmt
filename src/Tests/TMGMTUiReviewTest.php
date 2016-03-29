@@ -512,7 +512,7 @@ class TMGMTUiReviewTest extends EntityTestBase {
     // Check the labels for the multi delta body.
     $delta = $this->xpath('//*[@id="tmgmt-ui-element-body-test-wrapper"]/table/tbody/tr[1]/td[1]/div[1]/label');
     $this->assertEqual($delta[0], 'Delta #0');
-    $delta = $this->xpath('//*[@id="tmgmt-ui-element-body-test-wrapper"]/table/tbody/tr[3]/td[1]/div[1]/label');
+    $delta = $this->xpath('//*[@id="tmgmt-ui-element-body-test-wrapper"]/table/tbody[2]/tr[1]/td[1]/div[1]/label');
     $this->assertEqual($delta[0], 'Delta #1');
 
     // Check the labels for the multi delta/multi value image.

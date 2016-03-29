@@ -5,6 +5,7 @@
  * Main module file for the Translation Management module.
  */
 
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\tmgmt\ContinuousTranslatorInterface;
 use Drupal\tmgmt\Entity\Job;
@@ -529,15 +530,8 @@ function tmgmt_translator_labels_flagged(JobInterface $job = NULL) {
  */
 function tmgmt_theme() {
   return array(
-    'tmgmt_translator_review_form' => array(
+    'tmgmt_data_items_form' => array(
       'render element' => 'element',
-      'file' => 'tmgmt.theme.inc',
-      'function' => 'theme_tmgmt_translator_review_form',
-    ),
-    'tmgmt_translator_review_form_element' => array(
-      'render element' => 'element',
-      'file' => 'tmgmt.theme.inc',
-      'function' => 'theme_tmgmt_translator_review_form_element',
     ),
     'tmgmt_progress_bar' => array(
       'variables' => array(
@@ -559,6 +553,15 @@ function tmgmt_theme() {
       ),
     ),
   );
+}
+
+/**
+ * Preprocess function for tmgmt_data_items_form.
+ */
+function template_preprocess_tmgmt_data_items_form(&$variables) {
+  $element = $variables['element'];
+  $variables['ajaxid'] = $element['#ajaxid'];
+  $variables['top_label'] = $element['#top_label'];
 }
 
 /**

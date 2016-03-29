@@ -65,10 +65,17 @@ table.tmgmt-ui-review tbody th {
   position: absolute;
 }
 
+.tmgmt-ui-data-item-label .form-item label {
+    display: inline-block;
+    width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .tmgmt-ui-state {
-  /* Visually align the icon in the center between left table border and the
-     first textarea.*/
-  margin: 1.8em -10px 1em 0;
+  /* Visually align the icon with the text area next to it. */
+  margin-top: 2.4em;
   text-align: center;
 }
 
@@ -136,8 +143,9 @@ table.tmgmt-ui-review tbody th {
 }
 
 .tmgmt-ui-data-item-actions div {
+  /* Visually align the action buttons with the text area next to them. */
   position: relative;
-  margin-top: 25%;
+  margin-top: 2.4em;
 }
 
 .tmgmt-ui-data-item-actions div input {
