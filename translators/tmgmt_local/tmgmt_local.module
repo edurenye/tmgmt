@@ -106,6 +106,7 @@ function tmgmt_local_menu_links_discovered_alter(&$links) {
   // Display the menu item if one of the default past event views exists.
   $view = NULL;
   if ($view = Views::getView('tmgmt_local_manage_translate_task')) {
+    $view->initDisplay();
     $links['tmgmt_local_manage_translate_task'] = [
       'title' => new TranslatableMarkup('Manage tasks'),
       'description' => new TranslatableMarkup('Overview the local translation process and manage the tasks.'),
@@ -116,6 +117,7 @@ function tmgmt_local_menu_links_discovered_alter(&$links) {
     ];
   }
   if ($view = Views::getView('tmgmt_local_task_overview')) {
+    $view->initDisplay();
     $links['tmgmt_local_task_overview'] = [
       'title' => new TranslatableMarkup('Translate'),
       'description' => new TranslatableMarkup('Perform task translations.'),
