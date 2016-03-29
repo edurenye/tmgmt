@@ -29,7 +29,9 @@ class LocalTaskUnassignForm extends ContentEntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return Views::getView('tmgmt_local_task_overview')->getUrl();
+    $view = Views::getView('tmgmt_local_task_overview');
+    $view->initDisplay();
+    return $view->getUrl();
   }
 
   /**
@@ -51,7 +53,9 @@ class LocalTaskUnassignForm extends ContentEntityConfirmFormBase {
 
     drupal_set_message(t('Unassigned from translation local task @label.', array('@label' => $entity->label())));
 
-    $form_state->setRedirect(Views::getView('tmgmt_local_task_overview')->getUrl()->getRouteName());
+    $view = Views::getView('tmgmt_local_task_overview');
+    $view->initDisplay();
+    $form_state->setRedirect($view->getUrl()->getRouteName());
   }
 
 }

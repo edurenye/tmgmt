@@ -367,7 +367,9 @@ class LocalTaskItemForm extends ContentEntityForm {
     if ($all_done) {
       $task->setStatus(LocalTaskInterface::STATUS_COMPLETED);
       // If the task is now completed, redirect back to the overview.
-      $form_state->setRedirect(Views::getView('tmgmt_local_task_overview')->getUrl()->getRouteName());
+      $view = Views::getView('tmgmt_local_task_overview');
+      $view->initDisplay();
+      $form_state->setRedirect($view->getUrl()->getRouteName());
     }
     else {
       // If there are more task items, redirect back to the task.

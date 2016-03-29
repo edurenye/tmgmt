@@ -63,7 +63,9 @@ class LocalTaskAssignForm extends ContentEntityForm {
 
     drupal_set_message(t('Assigned @label to user @assignee_name.', array('@label' => $task->label(), '@assignee_name' => $assignee->getAccountName())));
 
-    $form_state->setRedirect(Views::getView('tmgmt_local_task_overview')->getUrl()->getRouteName());
+    $view = Views::getView('tmgmt_local_task_overview');
+    $view->initDisplay();
+    $form_state->setRedirect($view->getUrl()->getRouteName());
   }
 
 }

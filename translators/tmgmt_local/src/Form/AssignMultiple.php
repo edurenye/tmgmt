@@ -121,7 +121,9 @@ class AssignMultiple extends FormBase {
 
     drupal_set_message(t('Assigned @how_many to user @assignee_name.', array('@how_many' => $how_many, '@assignee_name' => $assignee->getAccountName())));
 
-    $form_state->setRedirect(Views::getView('tmgmt_local_task_overview')->getUrl()->getRouteName());
+    $view = Views::getView('tmgmt_local_task_overview');
+    $view->initDisplay();
+    $form_state->setRedirect($view->getUrl()->getRouteName());
   }
 
 }
