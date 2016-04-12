@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Main module file for the TMGMT Notification module.
+ */
+
+use Drupal\tmgmt\JobItemInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function tmgmt_notification_theme() {
+  return [
+    'job_item_needs_review' => [
+      'render element' => 'elements',
+    ],
+    'job_item_autoaccepted' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_tmgmt_courier_trigger_types().
+ */
+function tmgmt_notification_tmgmt_courier_trigger_types(&$types) {
+  $types['job_item_needs_review'] = [
+    'context' => 'tmgmt_notification',
+    'label' => 'Job item needs review',
+    'description' => 'Sent when a Job item is set to "needs review".',
+  ];
+  $types['job_item_autoaccepted'] = [
+    'context' => 'tmgmt_notification',
+    'label' => 'Autoaccepted translation',
+    'description' => 'Sent when a Job item is set to "completed" automatically.',
+  ];
+}
+
+/**
+ * Implements hook_tmgmt_job_item_update().
+ */
+function tmgmt_notification_tmgmt_job_item_update(JobItemInterface $job_item) {
+  /** @var \Drupal\tmgmt\JobItemInterface $original */
+  $original = $job_item->original;
+  if ($job_item->isNeedsReview() && !$original->isNeedsReview()) {
+    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_needs_review', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()]);
+  }
+  if (!$original->isNeedsReview() && !$original->isAccepted() && $job_item->isAccepted()) {
+    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_autoaccepted', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()]);
+  }
+}

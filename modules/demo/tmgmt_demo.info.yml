@@ -11,6 +11,7 @@ dependencies:
  - tmgmt_content
  - tmgmt_file
  - tmgmt_local
+ - tmgmt_notification
  - views
  - path
  - text
