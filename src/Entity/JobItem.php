@@ -571,6 +571,19 @@ class JobItem extends ContentEntityBase implements JobItemInterface {
   }
 
   /**
+   *
+   * @return boolean
+   */
+  public function isAbortable() {
+    if ($this->isActive() || $this->isNeedsReview()) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function isActive() {

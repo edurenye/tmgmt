@@ -165,6 +165,14 @@ class JobItemForm extends TmgmtFormBase {
     $item = $this->entity;
 
     // Add the form actions as well.
+    $actions['abort_job_item'] = array(
+      '#type' => 'submit',
+      '#value' => t('Abort Item'),
+      '#redirect' => 'admin/tmgmt/items/' . $item->id() . '/abort',
+      '#submit' => array('tmgmt_submit_redirect'),
+      '#access' => $item->isAbortable(),
+      '#weight' => 20,
+    );
     $actions['accept'] = array(
       '#type' => 'submit',
       '#button_type' => 'primary',
