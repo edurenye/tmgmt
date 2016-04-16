@@ -77,8 +77,8 @@ class SettingsForm extends ConfigFormBase {
     );
     $form['performance']['tmgmt_submit_job_item_on_cron'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Submit continuous job items'),
-      '#description' => t('Enabling will force all continuous job items to be submitted on cron.'),
+      '#title' => t('Submit continuous job items on cron'),
+      '#description' => t('Continuous job items are submitted in groups on cron runs. Otherwise they are submitted immediately when content is created.'),
       '#default_value' => $config->get('submit_job_item_on_cron'),
     );
     $form['performance']['job_items_cron_limit'] = array(
