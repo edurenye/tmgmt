@@ -18,16 +18,16 @@
  */
 #}
 <div title="{{ title }}">
-    {% if width_pending %}
-        <div class="tmgmt-progress-pending" style="width: {{ width_pending }}%">{{ count_pending }}</div>
-    {% endif %}
-    {% if width_translated %}
-        <div class="tmgmt-progress-translated" style="width: {{ width_translated }}%">{{ count_translated }}</div>
-    {% endif %}
-    {% if width_reviewed %}
-        <div class="tmgmt-progress-reviewed" style="width: {{ width_reviewed }}%">{{ count_reviewed }}</div>
-    {% endif %}
-    {% if width_accepted %}
-        <div class="tmgmt-progress-accepted" style="width: {{ width_accepted }}%">{{ count_accepted }}</div>
-    {% endif %}
+  {% if width_pending %}
+    <div class="tmgmt-progress-pending" style="width: {{ width_pending }}%">{{ count_pending }}</div>
+  {% endif %}
+  {% if width_translated %}
+    <div class="tmgmt-progress-translated" style="width: {{ width_translated }}%">{{ count_translated }}</div>
+  {% endif %}
+  {% if width_reviewed %}
+    <div class="tmgmt-progress-reviewed" style="width: {{ width_reviewed }}%">{{ count_reviewed }}</div>
+  {% endif %}
+  {% if width_accepted %}
+    <div class="tmgmt-progress-accepted" style="width: {{ width_accepted }}%">{{ count_accepted }}</div>
+  {% endif %}
 </div>

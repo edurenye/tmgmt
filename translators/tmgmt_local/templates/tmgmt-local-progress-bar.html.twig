@@ -16,13 +16,13 @@
  */
 #}
 <div title="{{ title }}">
-    {% if width_untranslated %}
-        <div class="tmgmt-local-progress-untranslated" style="width: {{ width_untranslated }}%">{{ count_untranslated }}</div>
-    {% endif %}
-    {% if width_translated %}
-        <div class="tmgmt-local-progress-translated" style="width: {{ width_translated }}%">{{ count_translated }}</div>
-    {% endif %}
-    {% if width_completed %}
-        <div class="tmgmt-local-progress-completed" style="width: {{ width_completed }}%">{{ count_completed }}</div>
-    {% endif %}
+  {% if width_untranslated %}
+    <div class="tmgmt-local-progress-untranslated" style="width: {{ width_untranslated }}%">{{ count_untranslated }}</div>
+  {% endif %}
+  {% if width_translated %}
+    <div class="tmgmt-local-progress-translated" style="width: {{ width_translated }}%">{{ count_translated }}</div>
+  {% endif %}
+  {% if width_completed %}
+    <div class="tmgmt-local-progress-completed" style="width: {{ width_completed }}%">{{ count_completed }}</div>
+  {% endif %}
 </div>
