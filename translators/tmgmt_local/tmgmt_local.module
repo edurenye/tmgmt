@@ -465,7 +465,8 @@ function tmgmt_local_get_assignees_for_tasks($tasks) {
  * @todo: Move this to the translator plugin API.
  */
 function tmgmt_local_tmgmt_job_item_update(JobItemInterface $job_item) {
-  if ($job_item->isAccepted() && !$job_item->original->isAccepted()) {
+  if ($job_item->isAccepted() && !$job_item->original->isAccepted()
+    || $job_item->isAborted() && !$job_item->original->isAborted()) {
     $tltiid = db_query('SELECT tltiid FROM {tmgmt_local_task_item} ti INNER JOIN {tmgmt_local_task} t ON ti.tltid = t.tltid WHERE t.tjid = :tjid AND ti.tjiid = :tjiid', array(':tjid' => $job_item->getJobId(), ':tjiid' => $job_item->id()))->fetchField();
     if ($tltiid) {
       $task_item = tmgmt_local_task_item_load($tltiid);

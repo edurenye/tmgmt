@@ -178,7 +178,7 @@ interface JobInterface extends ContentEntityInterface, EntityOwnerInterface {
    * @param string $item_id
    *   The source item id.
    *
-   * @return JobItem
+   * @return \Drupal\tmgmt\JobItemInterface
    *   The job item that was added to the job or FALSE if it couldn't be saved.
    *
    * @throws \Drupal\tmgmt\TMGMTException

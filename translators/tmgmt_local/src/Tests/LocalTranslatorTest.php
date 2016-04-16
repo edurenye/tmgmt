@@ -992,4 +992,74 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     $this->assertText('Translate');
   }
 
+  /**
+   * Test the task and task items are closed and completed when aborting a Job.
+   */
+  public function testAbort() {
+    // Prepare the scenario.
+    $translator = Translator::load('local');
+    $this->loginAsTranslator($this->localTranslatorPermissions);
+    $edit = array(
+      'tmgmt_translation_skills[0][language_from]' => 'en',
+      'tmgmt_translation_skills[0][language_to]' => 'de',
+    );
+    $this->drupalPostForm('user/' . $this->translator_user->id() . '/edit', $edit, t('Save'));
+    $job = $this->createJob();
+    $job->translator = $translator->id();
+    $first_job_item = $job->addItem('test_source', 'test', '1');
+    \Drupal::state()->set('tmgmt.test_source_data', [
+      'dummy' => [
+        'deep_nesting' => [
+          '#text' => file_get_contents(drupal_get_path('module', 'tmgmt') . '/tests/testing_html/sample.html'),
+          '#label' => 'Label for job item with type test and id 2.',
+          '#translate' => TRUE,
+          '#format' => 'basic_html',
+        ],
+      ],
+    ]);
+    $second_job_item = $job->addItem('test_source', 'test', '2');
+    $job->save();
+    $edit = [
+      'settings[translator]' => $this->translator_user->id(),
+    ];
+    $this->drupalPostForm($job->toUrl(), $edit, t('Submit to provider'));
+
+    // Check Job Item abort, close the task item.
+    $this->drupalGet('admin/tmgmt/items/' . $first_job_item->id() . '/abort');
+    $this->drupalPostForm(NULL, [], t('Confirm'));
+    $this->drupalGet('translate');
+    $this->assertNoRaw('views-field-progress">Closed');
+    $this->clickLink(t('View'));
+    $this->assertRaw('views-field-progress">Closed');
+    $this->assertTrue(preg_match('|translate/(\d+)|', $this->getUrl(), $matches), 'Task found');
+    /** @var \Drupal\tmgmt_local\Entity\LocalTask $task */
+    $task = \Drupal::entityTypeManager()->getStorage('tmgmt_local_task')->load($matches[1]);
+    $this->assertTrue($task->isPending());
+
+    // Checking if the 'Save as completed' button is not displayed.
+    $this->drupalGet('translate/items/1');
+    $elements = $this->xpath('//*[@id="edit-save-as-completed"]');
+    $this->assertTrue(empty($elements), "'Save as completed' button does not appear.");
+    // Checking if the 'Save' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-save"]');
+    $this->assertTrue(empty($elements), "'Save' button does not appear.");
+    // Checking if the 'Preview' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-preview"]');
+    $this->assertTrue(empty($elements), "'Preview' button does not appear.");
+    // Checking if the '✓' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-dummydeep-nesting-actions-finish-dummydeep-nesting"]');
+    $this->assertTrue(empty($elements), "'✓' button does not appear.");
+    // Checking translation is readonly.
+    $this->assertRaw('data-drupal-selector="edit-dummydeep-nesting-translation" readonly="readonly"');
+
+    // Check closing all task items also closes the task.
+    $this->drupalGet('admin/tmgmt/items/' . $second_job_item->id() . '/abort');
+    $this->drupalPostForm(NULL, [], t('Confirm'));
+    $this->drupalGet('translate/closed');
+    $this->assertText($task->label());
+    $task = \Drupal::entityTypeManager()->getStorage('tmgmt_local_task')->loadUnchanged($matches[1]);
+    $this->assertTrue($task->isClosed());
+    $this->assertRaw('views-field-progress">Closed');
+  }
+
 }

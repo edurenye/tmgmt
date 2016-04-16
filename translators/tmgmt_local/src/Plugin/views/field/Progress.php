@@ -8,6 +8,8 @@
 namespace Drupal\tmgmt_local\Plugin\views\field;
 
 use Drupal\tmgmt\Plugin\views\field\StatisticsBase;
+use Drupal\tmgmt_local\LocalTaskInterface;
+use Drupal\tmgmt_local\LocalTaskItemInterface;
 use Drupal\views\ResultRow;
 
 /**
@@ -21,8 +23,13 @@ class Progress extends StatisticsBase {
    * {@inheritdoc}
    */
   public function render(ResultRow $values) {
-    /** @var \Drupal\tmgmt_local\LocalTaskInterface $entity */
     $entity = $values->_entity;
+
+    if (($entity->getEntityTypeId() == 'tmgmt_local_task' && $entity->getStatus() == LocalTaskInterface::STATUS_CLOSED)
+    || ($entity->getEntityTypeId() == 'tmgmt_local_task_item' && $entity->getStatus() == LocalTaskItemInterface::STATUS_CLOSED)) {
+      return t('Closed');
+    }
+
     $counts = array(
       '@untranslated' => $entity->getCountUntranslated(),
       '@translated' => $entity->getCountTranslated(),
