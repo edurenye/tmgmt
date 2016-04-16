@@ -33,6 +33,7 @@ class LocalTranslatorPreviewTest extends LocalTranslatorTestBase {
     $job = $this->createJob('en', 'de');
     $job->translator = $translator;
     $job->save();
+    /** @var \Drupal\tmgmt\JobItemInterface $job_item */
     $job_item = tmgmt_job_item_create('content', $node->getEntityTypeId(), $node->id(), array('tjid' => $job->id()));
     $job_item->save();
 
@@ -69,12 +70,36 @@ class LocalTranslatorPreviewTest extends LocalTranslatorTestBase {
     $this->clickLink('View');
     $this->clickLink('Translate');
 
-    // Assert source link
+    // Assert source link.
     $this->assertLink($node->getTitle());
 
     // Test that local translator can access an unpublished node.
     $this->clickLink($node->getTitle());
     $this->assertText($node->getTitle());
+
+    $this->drupalGet('admin/tmgmt/items/' . $job_item->id());
+    // Check the preliminary state warning appears.
+    $this->assertText('The translations below are in preliminary state and changes in them are now allowed.');
+    // Checking if the 'Save as completed' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-save-as-completed"]');
+    $this->assertTrue(empty($elements), "'Save as completed' button does not appear.");
+    // Checking if the 'Save' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-save"]');
+    $this->assertTrue(empty($elements), "'Save' button does not appear.");
+    // Checking if the 'Validate' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-validate"]');
+    $this->assertFalse(empty($elements), "'Validate' button appears.");
+    // Checking if the 'Validate HTML tags' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-validate-html"]');
+    $this->assertFalse(empty($elements), "'Validate HTML tags' button appears.");
+    // Checking if the 'Preview' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-preview"]');
+    $this->assertFalse(empty($elements), "'Preview' button appears.");
+    // Checking if the '✓' button is not displayed.
+    $elements = $this->xpath('//*[@id="edit-title0value-actions-finish-title0value"]');
+    $this->assertTrue(empty($elements), "'✓' button does not appear.");
+    // Checking translation is readonly.
+    $this->assertRaw('data-drupal-selector="edit-title0value-translation" disabled="disabled"');
   }
 
 }

@@ -126,6 +126,8 @@ class JobItemForm extends TmgmtFormBase {
     // Build the review form.
     $data = $item->getData();
     $this->trackChangedSource(\Drupal::service('tmgmt.data')->flatten($data), $form_state);
+    $form_state->set('has_preliminary_items', FALSE);
+    $form_state->set('all_preliminary', TRUE);
     // Need to keep the first hierarchy. So flatten must take place inside
     // of the foreach loop.
     foreach (Element::children($data) as $key) {
@@ -135,7 +137,18 @@ class JobItemForm extends TmgmtFormBase {
       }
     }
 
-    if ($view =  entity_load('view', 'tmgmt_job_item_messages')) {
+    if ($form_state->get('has_preliminary_items')) {
+      $form['translation_changes'] = array(
+        '#type' => 'container',
+        '#markup' => $this->t('The translations below are in preliminary state and can not be changed.'),
+        '#attributes' => array(
+          'class' => array('messages', 'messages--warning'),
+        ),
+        '#weight' => -50,
+      );
+    }
+
+    if ($view = entity_load('view', 'tmgmt_job_item_messages')) {
       $form['messages'] = array(
         '#type' => 'details',
         '#title' => $view->label(),
@@ -184,7 +197,7 @@ class JobItemForm extends TmgmtFormBase {
     $actions['save'] = array(
       '#type' => 'submit',
       '#value' => t('Save'),
-      '#access' => !$item->isAccepted(),
+      '#access' => !$item->isAccepted() && !$form_state->get('all_preliminary'),
       '#submit' => array('::submitForm', '::save'),
     );
     if ($item->isActive()) {
@@ -429,8 +442,16 @@ class JobItemForm extends TmgmtFormBase {
 
         $item_element['label']['#markup'] = $leave_label;
         $item_element['status'] = $this->buildStatusRenderArray($this->entity->isAccepted() ? TMGMT_DATA_ITEM_STATE_ACCEPTED : $data_item['#status']);
+        $is_preliminary = $data[$key]['#status'] == TMGMT_DATA_ITEM_STATE_PRELIMINARY;
+        if ($is_preliminary) {
+          $form_state->set('has_preliminary_items', $is_preliminary);
+        }
+        else {
+          $form_state->set('all_preliminary', FALSE);
+        }
         $item_element['actions'] = array(
           '#type' => 'container',
+          '#access' => !$is_preliminary,
         );
         $item_element['below_actions'] = [
           '#type' => 'container',
@@ -457,7 +478,7 @@ class JobItemForm extends TmgmtFormBase {
 
         // Build source and translation areas.
         $item_element = $this->buildSource($item_element, $data_item, $rows, $form_state);
-        $item_element = $this->buildTranslation($item_element, $data_item, $rows, $form_state);
+        $item_element = $this->buildTranslation($item_element, $data_item, $rows, $form_state, $is_preliminary);
 
         $item_element = $this->buildChangedSource($item_element, $form_state, $field_name, $key, $ajax_id);
 
@@ -929,21 +950,25 @@ class JobItemForm extends TmgmtFormBase {
    *
    * @param array $item_element
    *   The form element for the data item.
+   * @param array $data_item
+   *   The data item.
    * @param int $rows
    *   The number of rows that should be displayed.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
+   * @param bool $is_preliminary
+   *   TRUE is the data item is in the PRELIMINARY STATE, FALSE otherwise.
    *
    * @return array
    *   The form element for the data item.
    */
-  protected function buildTranslation($item_element, $data_item, $rows, FormStateInterface $form_state) {
+  protected function buildTranslation($item_element, $data_item, $rows, FormStateInterface $form_state, $is_preliminary) {
     if (!empty($data_item['#format']) && $this->config('tmgmt.settings')->get('respect_text_format') && !$form_state->has('accept_item')) {
       $item_element['translation'] = array(
         '#type' => 'text_format',
         '#default_value' => isset($data_item['#translation']['#text']) ? $data_item['#translation']['#text'] : NULL,
         '#title' => t('Translation'),
-        '#disabled' => $this->entity->isAccepted(),
+        '#disabled' => $this->entity->isAccepted() || $is_preliminary,
         '#rows' => $rows,
         '#allowed_formats' => array($data_item['#format']),
       );
@@ -962,7 +987,7 @@ class JobItemForm extends TmgmtFormBase {
         '#type' => 'textarea',
         '#default_value' => isset($data_item['#translation']['#text']) ? $data_item['#translation']['#text'] : NULL,
         '#title' => t('Translation'),
-        '#disabled' => $this->entity->isAccepted(),
+        '#disabled' => $this->entity->isAccepted() || $is_preliminary,
         '#rows' => $rows,
       );
       if (!empty($data_item['#max_length'])) {
