@@ -79,7 +79,7 @@ class LocalTranslatorPreviewTest extends LocalTranslatorTestBase {
 
     $this->drupalGet('admin/tmgmt/items/' . $job_item->id());
     // Check the preliminary state warning appears.
-    $this->assertText('The translations below are in preliminary state and changes in them are now allowed.');
+    $this->assertText('The translations below are in preliminary state and can not be changed.');
     // Checking if the 'Save as completed' button is not displayed.
     $elements = $this->xpath('//*[@id="edit-save-as-completed"]');
     $this->assertTrue(empty($elements), "'Save as completed' button does not appear.");
