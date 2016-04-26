@@ -1,16 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\tmgmt_language_combination\Plugin\field\formatter\LanguageCombinationDefaultFormatter.
- */
-
 namespace Drupal\tmgmt_language_combination\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'tmgmt_language_combination_default' formatter.
@@ -29,14 +24,13 @@ class LanguageCombinationDefaultFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $elements['#theme'] = 'item_list';
-    $elements['#items'] = array();
+    $elements = [];
 
+    $installed_languages = \Drupal::languageManager()->getLanguages();
     foreach ($items as $delta => $item) {
-      $from = tmgmt_language_combination_language_label($item->language_from);
-      $to = tmgmt_language_combination_language_label($item->language_to);
-      $elements['#items'][$delta]['data'] = t('From @from to @to', array('@from' => $from, '@to' => $to));
-      $elements['#items'][$delta]['class'][] = Html::getClass($from . '-' . $to) . '">';
+      $from = $installed_languages[$item->language_from]->getName();
+      $to = $installed_languages[$item->language_to]->getName();
+      $elements[$delta]['#markup'] = t('From @from to @to', ['@from' => $from, '@to' => $to]);
     }
 
     return $elements;

@@ -1,80 +1,11 @@
 <?php
-use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Implements hook_field_validate().
+ * @file
+ * Main module file for the tmgmt language combination module.
  */
-function tmgmt_language_combination_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
-  $existing = array();
 
-  foreach ($items as $delta => $item) {
-    $key = $item['language_from'] . ':' . $item['language_to'];
-
-    if (!tmgmt_language_combination_field_is_empty($item, 'tmgmt_language_combination')) {
-      if ($item['language_from'] == $item['language_to']) {
-        $errors[$field['field_name']][$langcode][$delta][] = array(
-          'error' => 'tmgmt_language_combination_equal',
-          'message' => t("%name: The 'from' and 'to' language fields can't have the same value.", array('%name' => $instance['label'])),
-        );
-      }
-
-      if (isset($existing[$key])) {
-        $errors[$field['field_name']][$langcode][$delta][] = array(
-          'error' => 'tmgmt_language_combination_equal',
-          'message' => t('%name: The language combination has to be unique.', array('%name' => $instance['label'])),
-        );
-      }
-    }
-
-    $existing[$key] = TRUE;
-  }
-}
-
-/**
- * Implements hook_field_widget_error().
- */
-function tmgmt_language_combination_field_widget_error($element, $error, $form, FormStateInterface $form_state) {
-  form_error($element, $error['message']);
-}
-
-/**
- * Implements hook_field_update().
- */
-function tmgmt_language_combination_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  $languages = \Drupal::languageManager()->getLanguages();
-  $added_languages = array();
-
-  // In case the skill languages is not know to the system, install them.
-  foreach ($items as $item) {
-    if (!isset($languages[$item['language_to']]) && !isset($added_languages[$item['language_to']])) {
-      locale_add_language($item['language_to']);
-      $added_languages[$item['language_to']] = $item['language_to'];
-    }
-    if (!isset($languages[$item['language_from']]) && !isset($added_languages[$item['language_from']])) {
-      locale_add_language($item['language_from']);
-      $added_languages[$item['language_from']] = $item['language_from'];
-    }
-  }
-}
-
-/**
- * Returns the label of a language.
- *
- * @todo Remove this once the core language label function is fixed.
- *
- * @param $language
- *   A language in ISO format.
- * @return string
- *   The label of the language or an empty string if the language or its label
- *   are not defined.
- */
-function tmgmt_language_combination_language_label($language) {
-  $languages = tmgmt_language_combination_languages_predefined_list();
-  if (!empty($languages[$language])) {
-    return $languages[$language];
-  }
-  return '';
-}
+use Drupal\Core\Language\LanguageManager;
 
 /**
  * Prepares a language code list for a select form item with all languages.
@@ -83,18 +14,16 @@ function tmgmt_language_combination_languages_predefined_list() {
   $predefined = &drupal_static(__FUNCTION__);
 
   if (!isset($predefined)) {
-    include_once DRUPAL_ROOT . '/includes/iso.inc';
-    $predefined = _locale_get_predefined_list();
+    $predefined = LanguageManager::getStandardLanguageList();
 
     foreach ($predefined as $key => $value) {
 
-      // Include native name in output, if possible
+      // Include native name in output, if possible.
       if (count($value) > 1) {
-        $tname = t($value[0]);
-        $predefined[$key] = ($tname == $value[1]) ? $tname : "$tname ($value[1])";
+        $predefined[$key] = ($value[0] == $value[1]) ? $value[0] : "$value[0] ($value[1])";
       }
       else {
-        $predefined[$key] = t($value[0]);
+        $predefined[$key] = $value[0];
       }
     }
 
@@ -102,7 +31,7 @@ function tmgmt_language_combination_languages_predefined_list() {
     $installed_languages = \Drupal::languageManager()->getLanguages();
     foreach ($installed_languages as $lang => $info) {
       if (!isset($predefined[$lang])) {
-        $predefined[$lang] = $info->name;
+        $predefined[$lang] = $info->getName();
       }
     }
 

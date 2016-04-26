@@ -1,16 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\tmgmt_language_combination\Plugin\field\widget\LanguageCombinationWidget.
- */
-
 namespace Drupal\tmgmt_language_combination\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-
 
 /**
  * Plugin implementation of the 'tmgmt_language_combination_default' widget.

@@ -31,9 +31,22 @@ class LocalTranslatorTest extends LocalTranslatorTestBase {
     $this->drupalLogin($assignee1);
     $edit = array(
       'tmgmt_translation_skills[0][language_from]' => 'en',
+      'tmgmt_translation_skills[0][language_to]' => 'en',
+    );
+    $this->drupalPostForm('user/' . $assignee1->id() . '/edit', $edit, t('Save'));
+    $this->assertText('The \'from\' and \'to\' language fields can\'t have the same value.');
+    $edit = array(
+      'tmgmt_translation_skills[0][language_from]' => 'en',
       'tmgmt_translation_skills[0][language_to]' => 'de',
     );
     $this->drupalPostForm('user/' . $assignee1->id() . '/edit', $edit, t('Save'));
+    $this->assertText('The changes have been saved.');
+    $edit = array(
+      'tmgmt_translation_skills[1][language_from]' => 'en',
+      'tmgmt_translation_skills[1][language_to]' => 'de',
+    );
+    $this->drupalPostForm('user/' . $assignee1->id() . '/edit', $edit, t('Save'));
+    $this->assertText('The language combination has to be unique.');
 
     $assignee2 = $this->drupalCreateUser($this->localTranslatorPermissions);
     $this->drupalLogin($assignee2);

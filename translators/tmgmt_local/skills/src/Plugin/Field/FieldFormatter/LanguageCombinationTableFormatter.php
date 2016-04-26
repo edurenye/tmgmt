@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\tmgmt_language_combination\Plugin\field\formatter\LanguageCombinationDefaultFormatter.
- */
-
 namespace Drupal\tmgmt_language_combination\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
@@ -31,8 +26,8 @@ class LanguageCombinationTableFormatter extends FormatterBase {
     $rows = array();
 
     foreach ($items as $item) {
-      $to = tmgmt_language_combination_language_label($item->language_to);
-      $from = tmgmt_language_combination_language_label($item->language_from);
+      $to = $item->language_to->label();
+      $from = $item->language_from->label();
       $row[] = array(
         'data' => $from,
         'class' => array('from-language', Html::getClass('language-' . $from)),

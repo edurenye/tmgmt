@@ -1,15 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\tmgmt_language_combination\Plugin\field\field_type\LanguageCombination.
- */
-
 namespace Drupal\tmgmt_language_combination\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
  * Plugin implementation of the 'tmgmt_language_combination' field type.
@@ -19,7 +15,8 @@ use Drupal\Core\TypedData\DataDefinition;
  *   label = @Translation("Language Combination"),
  *   description = @Translation("Allows the definition of language combinations (e.g. 'From english to german')."),
  *   default_widget = "tmgmt_language_combination_default",
- *   default_formatter = "tmgmt_language_combination_default"
+ *   default_formatter = "tmgmt_language_combination_default",
+ *   constraints = {"TMGMTLanguageCombination" = {}}
  * )
  */
 class LanguageCombination extends FieldItemBase {
@@ -34,7 +31,6 @@ class LanguageCombination extends FieldItemBase {
       ->setLabel(t('To language'));
     return $property_definitions;
   }
-
 
   /**
    * {@inheritdoc}
@@ -70,33 +66,22 @@ class LanguageCombination extends FieldItemBase {
     return FALSE;
   }
 
-
   /**
    * {@inheritdoc}
-   *
-   * @todo
-   *
-   public function getConstraints() {
-    $constraint_manager = \Drupal::typedData()
-      ->getValidationConstraintManager();
-    $constraints = parent::getConstraints();
+   */
+  public function preSave() {
+    parent::preSave();
 
-    if ($max_length = $this->getFieldSetting('max_length')) {
-      $constraints[] = $constraint_manager->create('ComplexData', array(
-        'value' => array(
-          'Length' => array(
-            'max' => $max_length,
-            'maxMessage' => t('%name: the text may not be longer than @max characters.', array(
-              '%name' => $this
-                ->getFieldDefinition()->getFieldLabel(),
-              '@max' => $max_length
-            )),
-          )
-        ),
-      ));
+    // In case the skill languages is not know to the system, install them.
+    $languages = \Drupal::languageManager()->getLanguages();
+    if (!isset($languages[$this->language_from])) {
+      $language = ConfigurableLanguage::createFromLangcode($this->language_from);
+      $language->save();
     }
-
-    return $constraints;
-  }*/
+    if (!isset($languages[$this->language_to])) {
+      $language = ConfigurableLanguage::createFromLangcode($this->language_to);
+      $language->save();
+    }
+  }
 
 }
