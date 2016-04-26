@@ -44,9 +44,9 @@ function tmgmt_notification_tmgmt_job_item_update(JobItemInterface $job_item) {
   /** @var \Drupal\tmgmt\JobItemInterface $original */
   $original = $job_item->original;
   if ($job_item->isNeedsReview() && !$original->isNeedsReview()) {
-    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_needs_review', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()]);
+    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_needs_review', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()], $job_item->getJob()->getOwner());
   }
   if (!$original->isNeedsReview() && !$original->isAccepted() && $job_item->isAccepted()) {
-    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_autoaccepted', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()]);
+    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_autoaccepted', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()], $job_item->getJob()->getOwner());
   }
 }
