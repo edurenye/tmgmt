@@ -6,12 +6,16 @@
  */
 
 use Drupal\tmgmt\JobItemInterface;
+use Drupal\user\Entity\User;
 
 /**
  * Implements hook_theme().
  */
 function tmgmt_notification_theme() {
   return [
+    'job_item_submitted' => [
+      'render element' => 'elements',
+    ],
     'job_item_needs_review' => [
       'render element' => 'elements',
     ],
@@ -25,6 +29,11 @@ function tmgmt_notification_theme() {
  * Implements hook_tmgmt_courier_trigger_types().
  */
 function tmgmt_notification_tmgmt_courier_trigger_types(&$types) {
+  $types['job_item_submitted'] = [
+    'context' => 'tmgmt_notification',
+    'label' => 'Submitted Job Item',
+    'description' => 'Sent when a Job item is submitted.',
+  ];
   $types['job_item_needs_review'] = [
     'context' => 'tmgmt_notification',
     'label' => 'Job item needs review',
@@ -43,7 +52,10 @@ function tmgmt_notification_tmgmt_courier_trigger_types(&$types) {
 function tmgmt_notification_tmgmt_job_item_update(JobItemInterface $job_item) {
   /** @var \Drupal\tmgmt\JobItemInterface $original */
   $original = $job_item->original;
-  if ($job_item->isNeedsReview() && !$original->isNeedsReview()) {
+  if (!$original->isActive() && $job_item->isActive()) {
+    \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_submitted', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()], User::load(1));
+  }
+  if (!$original->isNeedsReview() && $job_item->isNeedsReview()) {
     \Drupal::service('tmgmt_courier.notification')->sendNotification('job_item_needs_review', ['tmgmt_job_item' => $job_item, 'tmgmt_job' => $job_item->getJob()], $job_item->getJob()->getOwner());
   }
   if (!$original->isNeedsReview() && !$original->isAccepted() && $job_item->isAccepted()) {
