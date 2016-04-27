@@ -289,7 +289,8 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
    */
   public function getSupportedTargetLanguages($source_language) {
     if ($plugin = $this->getPlugin()) {
-      if (isset($this->pluginInfo['cache languages']) && empty($this->pluginInfo['cache languages'])) {
+      $info = $plugin->getPluginDefinition();
+      if (isset($info['language_cache']) && empty($info['language_cache'])) {
         // This plugin doesn't support language caching.
         return $this->mapToLocalLanguages($plugin->getSupportedTargetLanguages($this, $this->mapToRemoteLanguage($source_language)));
       }
@@ -318,7 +319,8 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
    */
   public function getSupportedLanguagePairs() {
     if ($plugin = $this->getPlugin()) {
-      if (isset($this->pluginInfo['cache languages']) && empty($this->pluginInfo['cache languages'])) {
+      $info = $plugin->getPluginDefinition();
+      if (isset($info['language_cache']) && empty($info['language_cache'])) {
         // This plugin doesn't support language caching.
         return $plugin->getSupportedLanguagePairs($this);
       }
@@ -343,8 +345,15 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
    */
   public function getSupportedRemoteLanguages() {
     if ($plugin = $this->getPlugin()) {
+      if (empty($this->remoteLanguages) && $cache = \Drupal::cache('data')->get('tmgmt_remote_languages:' . $this->name)) {
+        $this->remoteLanguages = $cache->data;
+      }
       if (empty($this->remoteLanguages)) {
         $this->remoteLanguages = $plugin->getSupportedRemoteLanguages($this);
+        $info = $plugin->getPluginDefinition();
+        if (!isset($info['language_cache']) || !empty($info['language_cache'])) {
+          \Drupal::cache('data')->set('tmgmt_remote_languages:' . $this->name, $this->remoteLanguages, Cache::PERMANENT, $this->getCacheTags());
+        }
       }
     }
     return $this->remoteLanguages;
@@ -357,8 +366,8 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
     $this->languageCache = array();
     \Drupal::cache('data')->delete('tmgmt_languages:' . $this->name);
     \Drupal::cache('data')->delete('tmgmt_language_pairs:' . $this->name);
+    \Drupal::cache('data')->delete('tmgmt_remote_languages:' . $this->name);
   }
-
 
   /**
    * {@inheritdoc}
@@ -464,9 +473,9 @@ class Translator extends ConfigEntityBase implements TranslatorInterface {
   protected function updateCache() {
     if ($plugin = $this->getPlugin()) {
       $info = $plugin->getPluginDefinition();
-      if (!isset($info['language cache']) || !empty($info['language cache'])) {
-        \Drupal::cache('data')->set('tmgmt_languages:' . $this->name, $this->languageCache, Cache::PERMANENT, $this->getEntityType()->getListCacheTags());
-        \Drupal::cache('data')->set('tmgmt_language_pairs:' . $this->name, $this->languagePairsCache, Cache::PERMANENT, $this->getEntityType()->getListCacheTags());
+      if (!isset($info['language_cache']) || !empty($info['language_cache'])) {
+        \Drupal::cache('data')->set('tmgmt_languages:' . $this->name, $this->languageCache, Cache::PERMANENT, $this->getCacheTags());
+        \Drupal::cache('data')->set('tmgmt_language_pairs:' . $this->name, $this->languagePairsCache, Cache::PERMANENT, $this->getCacheTags());
       }
     }
   }
