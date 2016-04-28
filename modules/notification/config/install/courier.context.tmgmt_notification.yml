@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tmgmt_notification
+label: 'TMGMT Notification'
+tokens:
+  - tmgmt_job_item
+  - tmgmt_job
